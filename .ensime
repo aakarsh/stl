@@ -1,0 +1,40 @@
+;; If your project contains a lot of files, it is advisable to enable (:disable-source-load-on-startup t)
+;; Otherwise Ensime might incur a massive lag at startup time
+;; See more information about that at http://aemoncannon.github.com/ensime/index.html
+
+(
+  :subprojects (
+    (
+      :name "stl"
+      :module-name "stl"
+      :depends-on-modules (
+      
+      )
+      :package "default"
+      :version "0.1-SNAPSHOT"
+      :compile-deps (
+        "/home/aakarsh/.sbt/boot/scala-2.10.3/lib/scala-library.jar"
+      )
+      :runtime-deps (
+        "/home/aakarsh/.sbt/boot/scala-2.10.3/lib/scala-library.jar"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/classes"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/classes"
+      )
+      :test-deps (
+        "/home/aakarsh/.sbt/boot/scala-2.10.3/lib/scala-library.jar"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/classes"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/test-classes"
+      )
+      :source-roots (
+        "/home/aakarsh/src/scala/stl/src/main/scala"
+        "/home/aakarsh/src/scala/stl/src/main/java"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/src_managed/main"
+        "/home/aakarsh/src/scala/stl/src/test/scala"
+        "/home/aakarsh/src/scala/stl/src/test/java"
+        "/home/aakarsh/src/scala/stl/target/scala-2.10/src_managed/test"
+      )
+      :target "/home/aakarsh/src/scala/stl/target/scala-2.10/classes"
+      :test-target "/home/aakarsh/src/scala/stl/target/scala-2.10/test-classes"
+    )
+  )
+)
