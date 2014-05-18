@@ -2,41 +2,44 @@ import scala.util.parsing.combinator._
 
 package com.aakarshn {
 
-  abstract class EvalException extends Throwable
-  case class NoRulesApply(s:String) extends  EvalException
+  object Evaluator extends Application {
 
-  abstract class Term
-  case class Unit extends Term
-  case class True extends Term
-  case class False extends Term
-  case class Zero extends Term
-  case class Succ(t:Term) extends Term
-  case class Pred(t:Term) extends Term
-  case class If(t1:Term,t2:Term,t3:Term) extends Term
-  case class IsZero(t:Term) extends Term
+    abstract class EvalException extends Throwable
+    case class NoRulesApply(s:String) extends  EvalException
 
-  class Arith extends RegexParsers {
+    abstract class Term
+    case class Unit extends Term
+    case class True extends Term
+    case class False extends Term
+    case class Zero extends Term
+    case class Succ(t:Term) extends Term
+    case class Pred(t:Term) extends Term
+    case class If(t1:Term,t2:Term,t3:Term) extends Term
+    case class IsZero(t:Term) extends Term
 
-    def value:Parser[Any] = (
-      "0".r^^{_=> Zero } |
-      "true".r^^{_=>True} |
-      "false".r^^{_=>False}
-    )
 
-    def expr:Parser[Any] = term~rep(term|";"~term)
+    class Arith extends RegexParsers {
 
-    def term:Parser[Any] = ( 
-      value  |
-      """iszero""".r~term      |
-      "if".r~term~"then".r~"else".r~term  |
-      "succ".r~term |
-      "pred".r~term )
+      def value:Parser[Any] = (
+        "0".r^^{_=> Zero } |
+          "true".r^^{_=>True} |
+          "false".r^^{_=>False}
+      )
 
-    def run(s:String) = parseAll(expr,s)
+      def expr:Parser[Any] = term~rep(term|";"~term)
 
-  }
+      def term:Parser[Any] = (
+        value  |
+          """iszero""".r~term      |
+          "if".r~term~"then".r~"else".r~term  |
+          "succ".r~term |
+          "pred".r~term )
 
-  object RunArith extends Application {
+      def run(s:String) = parseAll(expr,s)
+
+    }
+
+
 
     def eval1(term: Term):Term = {
       term match {
@@ -75,3 +78,5 @@ package com.aakarshn {
   }
 
 }
+import com.aakarshn._
+
