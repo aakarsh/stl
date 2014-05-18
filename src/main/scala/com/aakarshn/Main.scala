@@ -35,23 +35,42 @@ package com.aakarshn {
       }
     }
 
-    class Arith extends RegexParsers {
-      def value:Parser[Any] = (
-        "0".r^^{_=> Zero }      |
-          "true".r^^{_=>True}   |
-          "false".r^^{_=>False}
+    class LCParser extends RegexParsers {
+
+      def value:Parser[Term] = (
+        "0".r^^{_=>  Zero() }      |
+          "true".r^^{_=>  True()}   |
+          "false".r^^{_=> False()}
       )
 
-      def expr:Parser[Any] = term~rep(term|";"~term)
+      def expr:Parser[Term] = term //~rep("\n"~term |";"~term)
 
-      def term:Parser[Any] = (
-          value                                    |
-          """iszero""".r~term                      |
-          "if".r~term~"then".r~"else".r~term       |
-          "succ".r~term                            |
-          "pred".r~term )
 
-      def run(s:String) = parseAll(expr,s)
+      def term:Parser[Term] = (
+          value                                      |
+          """iszero""".r~term  ^^ {
+            case("iszero"~v) => IsZero(v)
+          }                                          |
+          "if".r~term~"then".r~"else".r~term ^^ {
+//            case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
+            case _ => True()
+          } |
+          "succ".r~term ^^ {            
+            case("succ"~v) =>
+              Succ(v)
+          }                                         |
+          "pred".r~term ^^ {
+            case("pred"~v) =>
+              Pred(v)
+          }
+      )
+
+      def parse(s:String):Term =
+         parseAll(expr,s) match  {
+          case Success(result,_) => result
+          case f: NoSuccess => scala.sys.error(f.msg)
+        }
+        
 
     }
 
@@ -67,7 +86,9 @@ package com.aakarshn {
         case  If(True(),t2,t3) => t2
         case  If(False(),t2,t3) => t3
         case  If(t1:Term,t2:Term,t3:Term)   => If(eval1(t1),t2,t3)
+        case  Succ(Pred(t1)) => t1
         case  Succ(t1)  =>  Succ(eval_numerical(t1))
+        case  Pred(Succ(t1)) => t1
         case  Pred(t1)  => Pred(eval_numerical(t1))
         case  IsZero(Zero()) => True()
         case  IsZero(Succ(t:Term)) => False()
@@ -75,7 +96,6 @@ package com.aakarshn {
         case  IsZero(t1) => IsZero(eval1(t1))
         case _ => throw NoRulesApply("Out of rules")
       }
-
     }
 
     def eval(term:Term):Term = {
@@ -86,7 +106,12 @@ package com.aakarshn {
       }
     }
 
-    def parse(s:String) =  new Arith().run(s)
+    def parse(s:String):Term =  new LCParser().parse(s)
+
+    def run(prog: String) = {
+      val t = parse(prog)
+      eval(t)
+    }
 
     // Begin Assertions here
 
@@ -101,7 +126,6 @@ package com.aakarshn {
     require(is_value(Succ(Zero())))
     require(is_value(Pred(Zero())))
 
-
     // Evaluator tests
     require(True() == eval(If(True(),True(),False())), "If did not evaluate true correctly")
     require(False() == eval(If(False(),True(),False())), "If did not evaluate false correctly")
@@ -110,11 +134,18 @@ package com.aakarshn {
     require(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
     require(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
 
+    require(True() == parse("true"), "parsing atomic true not working")
+    require(Succ(Zero()) == parse("succ 0"), "parsing atomic true not working")
 
-    println("Done")
+    require(Zero() == run("succ pred 0"), "succ not working with pred")
+    require(Zero() == run("pred succ 0"), "pred not working with succ")
+
+    println("All assertions passed! ,add more assertions")
 
   }
 
+
 }
+
 import com.aakarshn._
 
