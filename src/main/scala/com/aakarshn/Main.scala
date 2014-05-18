@@ -17,7 +17,6 @@ package com.aakarshn {
     case class If(t1:Term,t2:Term,t3:Term) extends Term
     case class IsZero(t:Term) extends Term
 
-
     class Arith extends RegexParsers {
 
       def value:Parser[Any] = (
@@ -29,7 +28,7 @@ package com.aakarshn {
       def expr:Parser[Any] = term~rep(term|";"~term)
 
       def term:Parser[Any] = (
-        value  |
+          value  |
           """iszero""".r~term      |
           "if".r~term~"then".r~"else".r~term  |
           "succ".r~term |
@@ -38,8 +37,6 @@ package com.aakarshn {
       def run(s:String) = parseAll(expr,s)
 
     }
-
-
 
     def eval1(term: Term):Term = {
       term match {
@@ -75,6 +72,7 @@ package com.aakarshn {
     require(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
 
     println("Done")
+
   }
 
 }
