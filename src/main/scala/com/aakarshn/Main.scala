@@ -39,23 +39,27 @@ package com.aakarshn {
 
       def value:Parser[Term] = (
         "0".r^^{_=>  Zero() }      |
-          "true".r^^{_=>  True()}   |
-          "false".r^^{_=> False()}
+        "true".r^^{_=>  True()}   |
+        "false".r^^{_=> False()}
       )
 
-      def expr:Parser[Term] = term //~rep("\n"~term |";"~term)
+      def expr:Parser[Term] = term // ~rep("\n"~expr |";"~expr)
 
 
       def term:Parser[Term] = (
-          value                                      |
+        value                                      |
           """iszero""".r~term  ^^ {
             case("iszero"~v) => IsZero(v)
           }                                          |
-          "if".r~term~"then".r~"else".r~term ^^ {
-//            case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
-            case _ => True()
-          } |
-          "succ".r~term ^^ {            
+          "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
+            case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
+            case _ =>
+              println(s)
+              True()
+          }
+          }
+          |
+          "succ".r~term ^^ {
             case("succ"~v) =>
               Succ(v)
           }                                         |
@@ -70,8 +74,6 @@ package com.aakarshn {
           case Success(result,_) => result
           case f: NoSuccess => scala.sys.error(f.msg)
         }
-        
-
     }
 
     def eval1(term: Term):Term = {
@@ -140,10 +142,12 @@ package com.aakarshn {
     require(Zero() == run("succ pred 0"), "succ not working with pred")
     require(Zero() == run("pred succ 0"), "pred not working with succ")
 
+
+    require(Zero() == run("if true then 0 else succ 0"), "if-true evaluation not working")
+    require(Succ(Zero()) == run("if false then 0 else succ 0"),"if-false  evaluation not working")
     println("All assertions passed! ,add more assertions")
 
   }
-
 
 }
 
