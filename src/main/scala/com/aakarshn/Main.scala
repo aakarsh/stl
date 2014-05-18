@@ -151,7 +151,6 @@ package com.aakarshn {
 
     require(List(True(),False()) == run("true;false\n"),"multi expression parsing not working")
 
-
     require(Zero() == run1("if true then 0 else succ 0"), "if-true evaluation not working")
     require(Succ(Zero()) == run1("if false then 0 else succ 0"),"if-false  evaluation not working")
     println("All assertions passed! ,add more assertions")
