@@ -1,5 +1,6 @@
 import scala.util.parsing.combinator._
 
+
 package com.aakarshn {
 
   object Evaluator extends Application {
@@ -43,7 +44,8 @@ package com.aakarshn {
         "false".r^^{_=> False()}
       )
 
-      def expr:Parser[Term] = term 
+      def expr:Parser[List[Term]] = repsep(term,";") |repsep(term,"\n")
+
 
       /**
       def expr:Parser[Term] = term ~rep("\n".r~term |";".r~term) match {
@@ -69,7 +71,7 @@ package com.aakarshn {
           }
       )
 
-      def parse(s:String):Term =
+      def parse(s:String):List[Term] =
          parseAll(expr,s) match  {
           case Success(result,_) => result
           case f: NoSuccess => scala.sys.error(f.msg)
@@ -108,11 +110,16 @@ package com.aakarshn {
       }
     }
 
-    def parse(s:String):Term =  new LCParser().parse(s)
+    def parse(s:String):List[Term] =  new LCParser().parse(s)
+    def parse1(s:String):Term =  new LCParser().parse(s)(0)
 
     def run(prog: String) = {
       val t = parse(prog)
-      eval(t)
+      t.map(eval _)
+    }
+
+    def run1(prog: String) = {
+      run(prog)(0)
     }
 
     // Begin Assertions here
@@ -136,15 +143,17 @@ package com.aakarshn {
     require(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
     require(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
 
-    require(True() == parse("true"), "parsing atomic true not working")
-    require(Succ(Zero()) == parse("succ 0"), "parsing atomic true not working")
+    require(True() == parse1("true"), "parsing atomic true not working")
+    require(Succ(Zero()) == parse1("succ 0"), "parsing atomic true not working")
 
-    require(Zero() == run("succ pred 0"), "succ not working with pred")
-    require(Zero() == run("pred succ 0"), "pred not working with succ")
+    require(Zero() == run1("succ pred 0"), "succ not working with pred")
+    require(Zero() == run1("pred succ 0"), "pred not working with succ")
+
+    require(List(True(),False()) == run("true;false\n"),"multi expression parsing not working")
 
 
-    require(Zero() == run("if true then 0 else succ 0"), "if-true evaluation not working")
-    require(Succ(Zero()) == run("if false then 0 else succ 0"),"if-false  evaluation not working")
+    require(Zero() == run1("if true then 0 else succ 0"), "if-true evaluation not working")
+    require(Succ(Zero()) == run1("if false then 0 else succ 0"),"if-false  evaluation not working")
     println("All assertions passed! ,add more assertions")
 
   }
