@@ -43,22 +43,22 @@ package com.aakarshn {
         "false".r^^{_=> False()}
       )
 
-      def expr:Parser[Term] = term // ~rep("\n"~expr |";"~expr)
+      def expr:Parser[Term] = term 
 
+      /**
+      def expr:Parser[Term] = term ~rep("\n".r~term |";".r~term) match {
+        case (t~rest) => rest.foldLeft
+      }
+      */
 
       def term:Parser[Term] = (
         value                                      |
           """iszero""".r~term  ^^ {
             case("iszero"~v) => IsZero(v)
-          }                                          |
+          }  |
           "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
             case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
-            case _ =>
-              println(s)
-              True()
-          }
-          }
-          |
+          }}  |
           "succ".r~term ^^ {
             case("succ"~v) =>
               Succ(v)
