@@ -48,12 +48,6 @@ package com.aakarshn {
 
       def expr:Parser[List[Term]] = repsep(term,";") |repsep(term,"\n")
 
-      /**
-      def expr:Parser[Term] = term ~rep("\n".r~term |";".r~term) match {
-        case (t~rest) => rest.foldLeft
-      }
-      */
-
       def term:Parser[Term] = (
         "(" ~> term <~ ")" |
         value                                      |
@@ -63,15 +57,6 @@ package com.aakarshn {
           "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
             case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
           }}  |
-
-          /**
-          "(".r ~> term <~ ")".r  ^^ { 
-            s => {
-            println("["+s+"]");
-            Zero()
-            }}   |
-          */
-
           "succ".r~term ^^ {
             case("succ"~v) =>
               Succ(v)
@@ -153,7 +138,7 @@ package com.aakarshn {
       run(prog)(0)
     }
 
-    def runFile(in_file:String):scala.Unit ={
+    def runFile(in_file:String): scala.Unit ={
       val reader  = new FileReader(in_file);
 
       val results =run(reader);
