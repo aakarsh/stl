@@ -55,6 +55,7 @@ package com.aakarshn {
       */
 
       def term:Parser[Term] = (
+        "(" ~> term <~ ")" |
         value                                      |
           """iszero""".r~term  ^^ {
             case("iszero"~v) => IsZero(v)
@@ -62,6 +63,15 @@ package com.aakarshn {
           "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
             case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
           }}  |
+
+          /**
+          "(".r ~> term <~ ")".r  ^^ { 
+            s => {
+            println("["+s+"]");
+            Zero()
+            }}   |
+          */
+
           "succ".r~term ^^ {
             case("succ"~v) =>
               Succ(v)
@@ -143,6 +153,17 @@ package com.aakarshn {
       run(prog)(0)
     }
 
+    def runFile(in_file:String):scala.Unit ={
+      val reader  = new FileReader(in_file);
+
+      val results =run(reader);
+      results.map(pr => {
+        val rs = eval(pr)
+        print_result(rs);
+      })
+
+    }
+
     def print_results(terms:List[Term]):scala.Unit = terms.map(print_result)
 
     def num_term(prog:Term):Int =  {
@@ -172,16 +193,7 @@ package com.aakarshn {
         println("Usage: stl <input-file>")
         return;
       }
-      val in_file = args(0)
-
-      val reader  = new FileReader(in_file);
-
-      val results =run(reader);
-      results.map(pr => {
-        val rs = eval(pr)
-        print_result(rs);
-      })
-
+      runFile(args(0))
     }
 
     def run_assertions(): scala.Unit = {
@@ -207,6 +219,7 @@ package com.aakarshn {
       require(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
       require(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
 
+      require(Succ(Pred(Zero())) == parse1("succ(pred(0))"),"()  evaluation not working")
       require(True() == parse1("true"), "parsing atomic true not working")
       require(Succ(Zero()) == parse1("succ 0"), "parsing atomic true not working")
 
