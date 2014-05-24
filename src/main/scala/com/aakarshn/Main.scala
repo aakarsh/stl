@@ -124,8 +124,8 @@ package com.aakarshn {
       terms.map(eval _);
     }
 
-
     def parse(s:String):List[Term] =  new LCParser().fromString(s)
+
     def parse1(s:String):Term =  new LCParser().fromString(s)(0)
 
 
@@ -145,19 +145,22 @@ package com.aakarshn {
 
     def print_results(terms:List[Term]):scala.Unit = terms.map(print_result)
 
+    def num_term(prog:Term):Int =  {
+      def nt(acc:Int, n:Term):Int = 
+        n match {
+          case Zero() => acc
+          case Succ(t1 :Term) => nt(acc+1,t1)
+          case Pred(t1:Term)  => nt(acc-1,t1)
+          case _ => throw NoRulesApply("Not a number")
+        }
+      nt(0,prog)
+    }
+
     def print_result(prog:Term):scala.Unit = {
       prog match {
         case False() => println("false")
         case True() => println("true")
-        case Zero() => println("0")
-        case  Succ(t1:Term)  =>  {
-          print("succ ");
-          print_result(t1)
-        }
-        case  Pred(t1:Term)  =>  {
-          print("pred ");
-          print_result(t1)
-        }
+        case t:Term if is_numerical(t) => println(num_term(t))
         case _ => throw NoRulesApply("Out of rules")
       }
     }
@@ -165,17 +168,20 @@ package com.aakarshn {
     def main(args:Array[String]):scala.Unit= {
       run_assertions()
 
-      if(args.length < 2) {
+      if(args.length < 1) {
         println("Usage: stl <input-file>")
         return;
       }
+      val in_file = args(0)
 
-      val reader  = new FileReader(args(1));
+      val reader  = new FileReader(in_file);
+
       val results =run(reader);
       results.map(pr => {
         val rs = eval(pr)
         print_result(rs);
       })
+
     }
 
     def run_assertions(): scala.Unit = {
