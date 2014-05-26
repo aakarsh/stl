@@ -2,3 +2,4 @@
 target/
 .ensime_lucene/
 *.class
+progress.org
