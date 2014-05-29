@@ -16,99 +16,99 @@ package com.aakarshn {
     abstract class Term {
       /**
         Term substitution
-      */
+        */
       def substitute(variable:Int,value:Term) : Term = term_substitute(variable,value,this)
 
       /**
         Perform top level that is value gets substituted for variable 0
-       */
+        */
       def substitute(value:Term):Term  = {
         /**
           Shift vars in value make 0 free then substitute it into body
           */
-        val substituted_body = this.substitute(0,(value.rshift(1)))
+        val substituted_body = this.substitute(0,value.rshift(1))
         // Now that 0 has been substituted
         // Shift back variables in the program body
         substituted_body.lshift(1)
       }
 
-      /** 
+      /**
         Term shifting with cutoff
-      */
+        */
       def rshift(d:Int,c:Int) = term_shift(d,c,this)
       /**
-          Term shifting
-      */
+        Term shifting
+        */
       def rshift(d:Int):Term = term_shift(d,0,this)
 
       def lshift(d:Int):Term = this.rshift(-1)
 
 
-    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
-      /**
-        Walk over AST.        
-       */
-      def walk(cutoff:Int, term:Term):Term  = term match {
+      def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
+        /**
+          Walk over AST.        
+          */
+        def walk(cutoff:Int, term:Term):Term  = term match {
 
-        case Var(x:Int,n:Int) => {
-          onvar(cutoff,x,n)
-        }
-        case Abs(x:Int,name:String,body:Term) => {
-          // Entering abstraction 
-          Abs(x,name,walk(cutoff+1, body))
-        }
-        case App(t1:Term,t2:Term) =>  
-         App(walk(cutoff,t1),
+          case Var(x:Int,n:Int) => {
+            onvar(cutoff,x,n)
+          }
+          case Abs(name:String,body:Term) => {
+            // Entering abstraction
+            Abs(name,walk(cutoff+1, body))
+          }
+          case App(t1:Term,t2:Term) =>
+            App(walk(cutoff,t1),
               walk(cutoff,t2))
-        case t1:Term => t1
-        case _ => throw NoRulesApply("map_vars :Failing in mapping")
-      }
-      walk(c, term)
-    }
-
-
-    /**
-      Walk through the program AST.
-      Increment variable indices by d 
-      if they lie above the cutoff c
-
-      d - variable index increment
-      c - variable increment cutoff 
-      t - program ast
-    */
-    def term_shift(d:Int,c:Int,t:Term) = {
-
-      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
-        if(x >= cutoff){
-          Var(x+d,n+d);
-        } else {
-          Var(x,n+d);
+          case t1:Term => t1
+          case _ => throw NoRulesApply("map_vars :Failing in mapping")
         }
+        walk(c, term)
       }
-      map_vars(on_vars,c,t);
-    }
 
 
-    def term_substitute(j:Int,s:Term,t:Term) : Term = {
-      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
-        if(x == j+cutoff){
-          s.rshift(cutoff)
-        } else {
-          Var(x,n)
-        }
-      }
-      map_vars(on_vars,0,t)
-    }
-
-    def term_substitute_top(s:Term,body:Term):Term = {
       /**
-        Shift vars in s make 0 free then substitute it into body
-       */
-      val substituted_body = body.substitute(0,(s.rshift(1)))
-      // Now that 0 has been substituted 
-      // Shift back variables in the program body
-      substituted_body.lshift(1)
-    }
+        Walk through the program AST.
+        Increment variable indices by d 
+        if they lie above the cutoff c
+
+        d - variable index increment
+        c - variable increment cutoff 
+        t - program ast
+        */
+      def term_shift(d:Int,c:Int,t:Term) = {
+
+        def on_vars(cutoff:Int,x:Int,n:Int):Term = {
+          if(x >= cutoff){
+            Var(x+d,n+d);
+          } else {
+            Var(x,n+d);
+          }
+        }
+        map_vars(on_vars,c,t);
+      }
+
+
+      def term_substitute(j:Int,s:Term,t:Term) : Term = {
+        def on_vars(cutoff:Int , x:Int,n:Int):Term = {
+          if(x == j+cutoff){
+            s.rshift(cutoff)
+          } else {
+            Var(x,n)
+          }
+        }
+        map_vars(on_vars,0,t)
+      }
+
+      def term_substitute_top(s:Term,body:Term):Term = {
+        /**
+          Shift vars in s make 0 free then substitute it into body
+          */
+        val substituted_body = body.substitute(0,s.rshift(1))
+        // Now that 0 has been substituted
+        // Shift back variables in the program body
+        substituted_body.lshift(1)
+      }
     }
 
     case class Unit extends Term
@@ -120,15 +120,16 @@ package com.aakarshn {
     case class If(t1:Term,t2:Term,t3:Term) extends Term
     case class IsZero(t:Term) extends Term
     // n - keep track of the context length
-    // x - variable we refer to
-    case class Var(x:Int,n:Int) extends Term
-    case class Abs(x:Int,name:String,body:Term) extends Term
+    // id - id of the variable used for substitution
+    case class Var(id:Int,n:Int) extends Term
+    case class UnresolveVar(x:String) extends Term
+    case class Abs(name:String,body:Term) extends Term
     case class App(t1:Term, t2:Term) extends Term
 
 
     def is_value(t:Term) : Boolean = {
       t match {
-        case Abs(_,_,_) => true
+        case Abs(_,_) => true
         case t if (is_numerical(t)|| is_boolean(t)) => true
         case _ => false
       }
@@ -152,23 +153,101 @@ package com.aakarshn {
 
     class LCParser extends RegexParsers {
 
+      var ctx:List[String] = emptyctx()
+
       def value:Parser[Term] = (
         "0".r^^{_=>  Zero() }      |
-        "true".r^^{_=>  True()}   |
-        "false".r^^{_=> False()}
+          "true".r^^{_=>  True()}   |
+          "false".r^^{_=> False()}
       )
 
-      def expr:Parser[List[Term]] = repsep(term,";") |repsep(term,"\n")
+      def name_to_index(name:String,ctx:List[String]) = {
+        ctx.indexOf(name);
+      }
+
+      def ctxlength(ctx:List[String]) = ctx.length
+
+      def emptyctx() = List[String]();
+
+      def add2ctx(v:String) = {
+        ctx = ctx:+v
+      }
+
+      def atomic:Parser[Term] = {//        "("~> term <~")" | 
+        "[a-zA-Z0-9]+".r ^^{
+          s => s match{
+            case _ =>{
+              println("atom parser found :"+s)
+              UnresolveVar(s)
+            }
+          }
+        }
+      }
+
+      def lambda:Parser[Term] = {
+        "lambda ".r ~> "[a-zA-Z0-9]+".r~ ".".r~term ^^ {s=>
+          println("s:"+s)
+          s match {
+            case (v~d~body) => {
+              println("Abstraction :"+v)
+              Abs(v,body);
+            }
+          }
+        }
+      }
+
+
+
+      def expr:Parser[List[Term]] = repsep(term_top,";") | repsep(term_top,"\n")
+
+      def term_app = atomic  | repsep(term," ") ^^{ lst=>
+        lst match {
+          case Nil => Unit()
+          case (fst::snd) => 
+            App(fst,snd(1))
+        }
+      }
+
+      def term_top:Parser[Term] = term^^{
+        t:Term => 
+          def walk(p:Term,ctx:List[String]):Term ={
+             p match {
+               case UnresolveVar(x) => {                 
+                 val index = name_to_index(x,ctx)
+                 println("ctx: "+ctx+"x :"+x +" indx "+index)
+                 Var(index,ctx.length)
+               }
+               case App(t1:Term,t2:Term) => App(walk(t1,ctx),walk(t2,ctx))
+               case Abs(name:String,body:Term) => Abs(name,walk(body,name::ctx))
+               case t => t
+             }
+          }
+        walk(t,List[String]())
+      }
+
 
       def term:Parser[Term] = (
+        value  |
+        lambda |        
+        atomic |
         "(" ~> term <~ ")" |
-        value                                      |
+        term ~">=".r~ atomic ^^ {
+            s => 
+            println("FFFF");
+
+            s match{
+              case (t1~s~t2) => 
+                println("App["+t1+","+t2+"]")
+                App(t1,t2)
+            }
+          } |
+          "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
+            case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
+         }}  |
           """iszero""".r~term  ^^ {
             case("iszero"~v) => IsZero(v)
           }  |
-          "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
-            case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
-          }}  |
+
           "succ".r~term ^^ {
             case("succ"~v) =>
               Succ(v)
@@ -177,6 +256,8 @@ package com.aakarshn {
             case("pred"~v) =>
               Pred(v)
           }
+
+          
       )
 
       def expression_parser = expr
@@ -189,7 +270,7 @@ package com.aakarshn {
       }
 
       def fromString(s:String):List[Term] =
-         parseAll(expr,s) match  {
+        parseAll(expr,s) match  {
           case Success(result,_) => result
           case f: NoSuccess => scala.sys.error(f.msg)
         }
@@ -216,7 +297,7 @@ package com.aakarshn {
         case  IsZero(t1) => IsZero(eval1(t1))
 
         //Lambda Calculus
-        case App(Abs(x:Int,name:String,body:Term),v2) if is_value(v2) =>{
+        case App(Abs(name:String,body:Term),v2) if is_value(v2) =>{
           //println("Substituting value in abstraction "+x);
           body.substitute(v2)
         }
@@ -260,7 +341,7 @@ package com.aakarshn {
 
     def run(reader:Reader) = {
       val parsed_result = new LCParser().fromReader(reader)
-      parsed_result.map(eval _);      
+      parsed_result.map(eval _);
     }
 
     def run1(prog: String) = {
@@ -280,7 +361,7 @@ package com.aakarshn {
     def print_results(terms:List[Term]):scala.Unit = terms.map(print_result)
 
     def num_term(prog:Term):Int =  {
-      def nt(acc:Int, n:Term):Int = 
+      def nt(acc:Int, n:Term):Int =
         n match {
           case Zero() => acc
           case Succ(t1 :Term) => nt(acc+1,t1)
@@ -311,7 +392,7 @@ package com.aakarshn {
 
     def run_assertions(): scala.Unit = {
 
-    // Begin Assertions here
+      // Begin Assertions here
 
       //numerical tests
       require(is_numerical(Zero()))
@@ -346,13 +427,15 @@ package com.aakarshn {
 
       require(Var(1,1) == Var(0,0).rshift(1),"term shift")
 
-      require(Abs(0,"x",Var(0,1)) == Abs(0,"x",Var(0,0)).rshift(1), "term shift abstraction")
+      require(Abs("x",Var(0,1)) == Abs("x",Var(0,0)).rshift(1), "term shift abstraction")
 
-      val id_term = Abs(0,"x",Var(0,0))
+      val id_term = Abs("x",Var(0,0))
       require(True() == eval(App(id_term,True())),"identiy eval is failing")
       require(False() == eval(App(id_term,False())),"identiy eval is failing")
       require(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
-
+      val pair = Abs("x",Abs("y",Abs("f",App(App(Var(0,0),Var(1,0)),Var(2,0)))))
+      val fst = Abs("p",App(Var(0,0),Abs("x",Abs("y",Var(1,0)))))
+      require(List(Abs("x",Abs("y",Var(1,2)))) == new LCParser().fromString("(lambda x. lambda y. x)"),"parsing abstraction failing")
       println("All assertions passed !")
 
     }
