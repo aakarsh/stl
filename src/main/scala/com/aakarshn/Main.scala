@@ -196,15 +196,11 @@ package com.aakarshn {
         }
       }
 
-
-
       def expr:Parser[List[Term]] = repsep(term_top,";") | repsep(term_top,"\n")
 
-      def term_app = atomic  | repsep(term," ") ^^{ lst=>
-        lst match {
-          case Nil => Unit()
-          case (fst::snd) => 
-            App(fst,snd(1))
+      def term_app:Parser[Term] = term ~" ".r~atomic ^^{    s =>
+        s match {
+          case (t~s~a) =>App(t,a)
         }
       }
 
@@ -230,18 +226,10 @@ package com.aakarshn {
         value  |
         lambda |        
         atomic |
-        "(" ~> term <~ ")" |
-        term ~">=".r~ atomic ^^ {
-            s => 
-            println("FFFF");
 
-            s match{
-              case (t1~s~t2) => 
-                println("App["+t1+","+t2+"]")
-                App(t1,t2)
-            }
-          } |
-          "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
+        "(" ~> term <~ ")" |
+        term_app|
+         "if".r~term~"then".r~term~"else".r~term ^^ { s => s match {
             case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
          }}  |
           """iszero""".r~term  ^^ {
