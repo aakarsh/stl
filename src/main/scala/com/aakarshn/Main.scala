@@ -17,31 +17,98 @@ package com.aakarshn {
       /**
         Term substitution
       */
-      def ->(variable:Int,value:Term) : Term = term_substitute(variable,value,this)
+      def substitute(variable:Int,value:Term) : Term = term_substitute(variable,value,this)
 
       /**
         Perform top level that is value gets substituted for variable 0
        */
-      def ->(value:Term):Term = {
+      def substitute(value:Term):Term  = {
         /**
           Shift vars in value make 0 free then substitute it into body
           */
-        val substituted_body = this->(0,(value>>>1))
+        val substituted_body = this.substitute(0,(value.rshift(1)))
         // Now that 0 has been substituted
         // Shift back variables in the program body
-        substituted_body<<<1
+        substituted_body.lshift(1)
       }
 
       /** 
         Term shifting with cutoff
       */
-      def >>>(d:Int,c:Int) = term_shift(d,c,this)
+      def rshift(d:Int,c:Int) = term_shift(d,c,this)
       /**
           Term shifting
       */
-      def >>>(d:Int):Term = term_shift(d,0,this)
+      def rshift(d:Int):Term = term_shift(d,0,this)
 
-      def <<<(d:Int):Term = >>>(-1)
+      def lshift(d:Int):Term = this.rshift(-1)
+
+
+    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
+      /**
+        Walk over AST.        
+       */
+      def walk(cutoff:Int, term:Term):Term  = term match {
+
+        case Var(x:Int,n:Int) => {
+          onvar(cutoff,x,n)
+        }
+        case Abs(x:Int,name:String,body:Term) => {
+          // Entering abstraction 
+          Abs(x,name,walk(cutoff+1, body))
+        }
+        case App(t1:Term,t2:Term) =>  
+         App(walk(cutoff,t1),
+              walk(cutoff,t2))
+        case t1:Term => t1
+        case _ => throw NoRulesApply("map_vars :Failing in mapping")
+      }
+      walk(c, term)
+    }
+
+
+    /**
+      Walk through the program AST.
+      Increment variable indices by d 
+      if they lie above the cutoff c
+
+      d - variable index increment
+      c - variable increment cutoff 
+      t - program ast
+    */
+    def term_shift(d:Int,c:Int,t:Term) = {
+
+      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
+        if(x >= cutoff){
+          Var(x+d,n+d);
+        } else {
+          Var(x,n+d);
+        }
+      }
+      map_vars(on_vars,c,t);
+    }
+
+
+    def term_substitute(j:Int,s:Term,t:Term) : Term = {
+      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
+        if(x == j+cutoff){
+          s.rshift(cutoff)
+        } else {
+          Var(x,n)
+        }
+      }
+      map_vars(on_vars,0,t)
+    }
+
+    def term_substitute_top(s:Term,body:Term):Term = {
+      /**
+        Shift vars in s make 0 free then substitute it into body
+       */
+      val substituted_body = body.substitute(0,(s.rshift(1)))
+      // Now that 0 has been substituted 
+      // Shift back variables in the program body
+      substituted_body.lshift(1)
+    }
     }
 
     case class Unit extends Term
@@ -129,7 +196,6 @@ package com.aakarshn {
     }
 
     def eval1(term: Term):Term = {
-      //println("eval1 "+term)
       def eval_numerical(t1:Term) = {
         val result = eval1(t1)
         require(is_numerical(result))
@@ -152,7 +218,7 @@ package com.aakarshn {
         //Lambda Calculus
         case App(Abs(x:Int,name:String,body:Term),v2) if is_value(v2) =>{
           //println("Substituting value in abstraction "+x);
-          body->(v2)
+          body.substitute(v2)
         }
 
         case App(v1:Term,t2:Term) if is_value(v1) =>{
@@ -168,78 +234,7 @@ package com.aakarshn {
       }
     }
 
-    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
 
-      /**
-        Walk over AST.        
-       */
-      def walk(cutoff:Int, term:Term):Term  = term match {
-
-        case Var(x:Int,n:Int) => {
-          onvar(cutoff,x,n)
-        }
-        case Abs(x:Int,name:String,body:Term) => {
-          // Entering abstraction 
-          Abs(x,name,walk(cutoff+1, body))
-        }
-        case App(t1:Term,t2:Term) =>  
-         App(walk(cutoff,t1),
-              walk(cutoff,t2))
-        case t1:Term => t1
-        case _ => throw NoRulesApply("map_vars :Failing in mapping")
-      }
-
-      walk(c, term)
-    }
-
-
-    /**
-      Walk through the program AST.
-      Increment variable indices by d 
-      if they lie above the cutoff c
-
-      d - variable index increment
-      c - variable increment cutoff 
-      t - program ast
-
-    */
-    def term_shift(d:Int,c:Int,t:Term) = {
-
-      //println("term_shift :d "+ d+" c "+c +" t "+ t);
-
-      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
-        if(x >= cutoff){
-          Var(x+d,n+d);
-        } else {
-          Var(x,n+d);
-        }
-      }
-      map_vars(on_vars,c,t);
-    }
-
-
-    def term_substitute(j:Int,s:Term,t:Term) : Term = {
-      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
-        //println("term_substitute c "+cutoff+" x  "+x+" n " +n)
-        //println("substituting j="+j+" term "+s+" body"+ t)
-        if(x == j+cutoff){
-          s>>>cutoff
-        } else {
-          Var(x,n)
-        }
-      }
-      map_vars(on_vars,0,t)
-    }
-
-    def term_substitute_top(s:Term,body:Term):Term = {
-      /**
-        Shift vars in s make 0 free then substitute it into body
-       */
-      val substituted_body = body->(0,(s>>>1))
-      // Now that 0 has been substituted 
-      // Shift back variables in the program body
-      substituted_body<<<1
-    }
 
     def eval(term:Term):Term = {
       try {
@@ -349,9 +344,9 @@ package com.aakarshn {
       require(Zero() == run1("if true then 0 else succ 0"), "if-true evaluation not working")
       require(Succ(Zero()) == run1("if false then 0 else succ 0"),"if-false  evaluation not working")
 
-      require(Var(1,1) == Var(0,0)>>>1,"term shift")
+      require(Var(1,1) == Var(0,0).rshift(1),"term shift")
 
-      require(Abs(0,"x",Var(0,1)) == Abs(0,"x",Var(0,0))>>>1, "term shift abstraction")
+      require(Abs(0,"x",Var(0,1)) == Abs(0,"x",Var(0,0)).rshift(1), "term shift abstraction")
 
       val id_term = Abs(0,"x",Var(0,0))
       require(True() == eval(App(id_term,True())),"identiy eval is failing")
