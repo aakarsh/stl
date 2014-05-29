@@ -4,13 +4,46 @@ import java.io._
 
 package com.aakarshn {
 
+  /**
+    A direct port of the evaluator for simply typed lambda calculus.    
+    */
   object Evaluator  {
 
     abstract class EvalException extends Throwable
 
     case class NoRulesApply(s:String) extends  EvalException
 
-    abstract class Term
+    abstract class Term {
+      /**
+        Term substitution
+      */
+      def ->(variable:Int,value:Term) : Term = term_substitute(variable,value,this)
+
+      /**
+        Perform top level that is value gets substituted for variable 0
+       */
+      def ->(value:Term):Term = {
+        /**
+          Shift vars in value make 0 free then substitute it into body
+          */
+        val substituted_body = this->(0,(value>>>1))
+        // Now that 0 has been substituted
+        // Shift back variables in the program body
+        substituted_body<<<1
+      }
+
+      /** 
+        Term shifting with cutoff
+      */
+      def >>>(d:Int,c:Int) = term_shift(d,c,this)
+      /**
+          Term shifting
+      */
+      def >>>(d:Int):Term = term_shift(d,0,this)
+
+      def <<<(d:Int):Term = >>>(-1)
+    }
+
     case class Unit extends Term
     case class True extends Term
     case class False extends Term
@@ -19,7 +52,27 @@ package com.aakarshn {
     case class Pred(t:Term) extends Term
     case class If(t1:Term,t2:Term,t3:Term) extends Term
     case class IsZero(t:Term) extends Term
+    // n - keep track of the context length
+    // x - variable we refer to
+    case class Var(x:Int,n:Int) extends Term
+    case class Abs(x:Int,name:String,body:Term) extends Term
+    case class App(t1:Term, t2:Term) extends Term
 
+
+    def is_value(t:Term) : Boolean = {
+      t match {
+        case Abs(_,_,_) => true
+        case t if (is_numerical(t)|| is_boolean(t)) => true
+        case _ => false
+      }
+    }
+
+    def is_boolean(t:Term) : Boolean = {
+      t match{
+        case True()| False() => true
+        case _ => false
+      }
+    }
     def is_numerical(t:Term): Boolean = {
       t match {
         case Zero() => true
@@ -29,14 +82,6 @@ package com.aakarshn {
       }
     }
 
-    def is_value(t:Term): Boolean = {
-      t match {
-        case True() => true
-        case False() => true
-        case t if is_numerical(t) => true
-        case _ => false
-      }
-    }
 
     class LCParser extends RegexParsers {
 
@@ -84,11 +129,11 @@ package com.aakarshn {
     }
 
     def eval1(term: Term):Term = {
-
+      //println("eval1 "+term)
       def eval_numerical(t1:Term) = {
-        val te = eval1(t1)
-        require(is_numerical(te))
-        te
+        val result = eval1(t1)
+        require(is_numerical(result))
+        result
       }
 
       term match {
@@ -103,13 +148,103 @@ package com.aakarshn {
         case  IsZero(Succ(t:Term)) => False()
         case  IsZero(Pred(t:Term)) => False()
         case  IsZero(t1) => IsZero(eval1(t1))
+
+        //Lambda Calculus
+        case App(Abs(x:Int,name:String,body:Term),v2) if is_value(v2) =>{
+          //println("Substituting value in abstraction "+x);
+          body->(v2)
+        }
+
+        case App(v1:Term,t2:Term) if is_value(v1) =>{
+          App(v1,eval1(t2))
+        }
+
+        case App(t1:Term,t2:Term) => {
+          val r1 = eval1(t2)
+          App(r1,t2)
+        }
+
         case _ => throw NoRulesApply("Out of rules")
       }
     }
 
+    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
+
+      /**
+        Walk over AST.        
+       */
+      def walk(cutoff:Int, term:Term):Term  = term match {
+
+        case Var(x:Int,n:Int) => {
+          onvar(cutoff,x,n)
+        }
+        case Abs(x:Int,name:String,body:Term) => {
+          // Entering abstraction 
+          Abs(x,name,walk(cutoff+1, body))
+        }
+        case App(t1:Term,t2:Term) =>  
+         App(walk(cutoff,t1),
+              walk(cutoff,t2))
+        case t1:Term => t1
+        case _ => throw NoRulesApply("map_vars :Failing in mapping")
+      }
+
+      walk(c, term)
+    }
+
+
+    /**
+      Walk through the program AST.
+      Increment variable indices by d 
+      if they lie above the cutoff c
+
+      d - variable index increment
+      c - variable increment cutoff 
+      t - program ast
+
+    */
+    def term_shift(d:Int,c:Int,t:Term) = {
+
+      //println("term_shift :d "+ d+" c "+c +" t "+ t);
+
+      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
+        if(x >= cutoff){
+          Var(x+d,n+d);
+        } else {
+          Var(x,n+d);
+        }
+      }
+      map_vars(on_vars,c,t);
+    }
+
+
+    def term_substitute(j:Int,s:Term,t:Term) : Term = {
+      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
+        //println("term_substitute c "+cutoff+" x  "+x+" n " +n)
+        //println("substituting j="+j+" term "+s+" body"+ t)
+        if(x == j+cutoff){
+          s>>>cutoff
+        } else {
+          Var(x,n)
+        }
+      }
+      map_vars(on_vars,0,t)
+    }
+
+    def term_substitute_top(s:Term,body:Term):Term = {
+      /**
+        Shift vars in s make 0 free then substitute it into body
+       */
+      val substituted_body = body->(0,(s>>>1))
+      // Now that 0 has been substituted 
+      // Shift back variables in the program body
+      substituted_body<<<1
+    }
+
     def eval(term:Term):Term = {
       try {
-        eval1(term)
+        val t = eval1(term)
+        eval(t)
       } catch{
         case ex:NoRulesApply => term
       }
@@ -122,7 +257,6 @@ package com.aakarshn {
     def parse(s:String):List[Term] =  new LCParser().fromString(s)
 
     def parse1(s:String):Term =  new LCParser().fromString(s)(0)
-
 
     def run(prog: String) = {
       val t = parse(prog)
@@ -146,7 +280,6 @@ package com.aakarshn {
         val rs = eval(pr)
         print_result(rs);
       })
-
     }
 
     def print_results(terms:List[Term]):scala.Unit = terms.map(print_result)
@@ -216,7 +349,17 @@ package com.aakarshn {
       require(Zero() == run1("if true then 0 else succ 0"), "if-true evaluation not working")
       require(Succ(Zero()) == run1("if false then 0 else succ 0"),"if-false  evaluation not working")
 
+      require(Var(1,1) == Var(0,0)>>>1,"term shift")
+
+      require(Abs(0,"x",Var(0,1)) == Abs(0,"x",Var(0,0))>>>1, "term shift abstraction")
+
+      val id_term = Abs(0,"x",Var(0,0))
+      require(True() == eval(App(id_term,True())),"identiy eval is failing")
+      require(False() == eval(App(id_term,False())),"identiy eval is failing")
+      require(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
+
       println("All assertions passed !")
+
     }
   }
 
