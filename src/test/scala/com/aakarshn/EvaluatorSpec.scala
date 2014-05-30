@@ -44,6 +44,8 @@ class EvaluatorSpec extends UnitSpec {
       require(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
   }
 
+  
+
   /**
   "An empty Set" should "have size 0" in {
     assert(Set.empty.size == 0)

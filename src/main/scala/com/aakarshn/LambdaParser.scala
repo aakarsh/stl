@@ -77,8 +77,7 @@ class LambdaParser extends RegexParsers {
   }
 
   def term:Parser[Term] = (
-      LPAREN~> term <~RPAREN
-      | value      
+      value      
       | IF~term~THEN~term~ELSE~term ^^ {
           case(_~t1~_~t2~_~t3) => If(t1,t2,t3)
       }
@@ -93,11 +92,13 @@ class LambdaParser extends RegexParsers {
       }
      | lambda
      | term_app
+     | LPAREN~> term <~RPAREN
      | atomic
   )
 
   def term_app:Parser[Term] = (
       atomic ~ term ^^{case (t~a) => App(t,a) }
+    | "("~ lambda ~")" ~ term ^^{case (_~t~_~a) => App(t,a) }
     | lambda ~ term ^^{case (t~a) => App(t,a) }
   )
 
