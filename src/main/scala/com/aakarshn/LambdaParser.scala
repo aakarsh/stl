@@ -93,14 +93,14 @@ class LambdaParser extends RegexParsers {
       | PRED~term ^^ {
         case(_~v) => Pred(v)
       }
-     | term_app
      | lambda
+     | term_app
      | atomic
   )
 
   def term_app:Parser[Term] = (
-      atomic ~ APP_DELIM ~ term ^^{case (t~_~a) => App(t,a) }
-    | lambda ~ APP_DELIM ~ term ^^{case (t~_~a) => App(t,a) }
+      atomic /*~ APP_DELIM*/ ~ term ^^{case (t~a) => App(t,a) }
+    | lambda /*~ APP_DELIM*/ ~ term ^^{case (t~a) => App(t,a) }
   )
 
   def expression_parser = expr

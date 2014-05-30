@@ -20,12 +20,12 @@ class ParserSpec extends UnitSpec {
   }
 
   it should "application parsing" in {
-    val v =parser.fromStringTerm("x,x,x")
+    val v =parser.fromStringTerm("x x x")
     println("Application parsing "+v)
   }
 
   it should "generate nameless representation " in {
-    val v = parser.fromString("lambda x. lambda y. lambda z. x,y,z")
+    val v = parser.fromString("lambda x. lambda y. lambda z. x y z")
     require(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0),"hmm")
   }
 
