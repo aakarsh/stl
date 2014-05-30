@@ -7,17 +7,14 @@ import Evaluator._
 
 class ParserSpec extends UnitSpec {
 
-
   "Term Parser" should "parse values" in {
+    val p = new LambdaParser()
+    p.parseAll(p.term,"0")
 
-    val p = new LCParser()
-    p.parseAll(term,"0")
     require(Zero() == parse1("0"),"Failed parsing value 0")
     require(True() == parse1("true"),"Failed parsing value true")
     require(False() == parse1("false"),"Failed parsing value false")
-  }
-
-  
+  }  
 
   /**
   it should "parse variable"  in {
@@ -48,7 +45,7 @@ class ParserSpec extends UnitSpec {
   }
 
   "Parser" should "work" in {
-    require(List(Abs("x",Abs("y",Var(1,2)))) == new LCParser().fromString("(lambda x. lambda y. x)"),"parsing abstraction failing")
+    require(List(Abs("x",Abs("y",Var(1,2)))) == new LambdaParser().fromString("(lambda x. lambda y. x)"),"parsing abstraction failing")
   }
 
   */
