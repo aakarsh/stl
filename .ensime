@@ -23,7 +23,6 @@
       :test-deps (
         "/home/aakarsh/.sbt/boot/scala-2.10.3/lib/scala-library.jar"
         "/home/aakarsh/src/scala/stl/target/scala-2.10/classes"
-        "/home/aakarsh/src/scala/stl/target/scala-2.10/test-classes"
       )
       :source-roots (
         "/home/aakarsh/src/scala/stl/src/main/scala"

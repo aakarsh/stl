@@ -1,3 +1,5 @@
+(require 'ensime)
+
 (defvar scala-src-dir "~/src/pub/scala/src")
 (defvar scala-src-lib-dir "~/src/pub/scala/src/library")
 (defvar scala-files-regexp "*.scala")
@@ -15,3 +17,8 @@
   (find-name-dired  scala-src-dir regexp))
 
 
+
+(defun an/ensime-sbt-do-test ()
+  (interactive)
+  (ensime-sbt-switch)
+  (ensime-sbt-action "test"))
