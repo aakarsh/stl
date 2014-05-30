@@ -38,13 +38,32 @@ class EvaluatorSpec extends UnitSpec {
   }
 
   "Identity Eval" should "work" in {
-          val id_term = Abs("x",Var(0,0))
+       val id_term = Abs("x",Var(0,0))
       require(True() == eval(App(id_term,True())),"identiy eval is failing")
       require(False() == eval(App(id_term,False())),"identiy eval is failing")
       require(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
   }
 
-  
+  "Runner" should "should parse and evaluate simple lambda calculus expressions" in {
+
+    val v = Evaluator.run("(lambda x. x) true")
+    require(True() == v(0),"Running identity returns identity got:"+v )
+
+//    Evaluator.run("(lambda x. x) (lambda x. x x);")
+
+
+//    val pair = Evaluator.run("(lambda x. lambda y. lambda f. f x y ) true true")
+//    println(pair)
+
+  }
+
+  /*
+  "Running" should "parse and evaluate from file" in {
+    Evaluator.runFile("test-files/simple-arithmetic.f")
+  }
+  */
+
+
 
   /**
   "An empty Set" should "have size 0" in {

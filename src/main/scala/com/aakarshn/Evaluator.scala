@@ -107,10 +107,14 @@ package com.aakarshn {
         results.map(pr => {
           val rs = eval(pr)
           print_result(rs);
+          println("");
         })
       }
 
-      def print_results(terms:List[Term]):scala.Unit = terms.map(print_result)
+      def print_results(terms:List[Term]):scala.Unit = terms.map({ term =>
+        print_result(term) ;
+        println("");
+      })
 
       def num_term(prog:Term):Int =  {
         def nt(acc:Int, n:Term):Int =
@@ -118,17 +122,20 @@ package com.aakarshn {
             case Zero() => acc
             case Succ(t1 :Term) => nt(acc+1,t1)
             case Pred(t1:Term)  => nt(acc-1,t1)
-            case _ => throw NoRulesApply("Not a number")
+            case _ => throw NoRulesApply("num_term:Not a number")
           }
         nt(0,prog)
       }
 
       def print_result(prog:Term):scala.Unit = {
         prog match {
-          case False() => println("false")
-          case True() => println("true")
-          case t:Term if is_numerical(t) => println(num_term(t))
-          case _ => throw NoRulesApply("Out of rules")
+          case False() => print("false")
+          case True() => print("true")
+          case App(t1:Term,t2:Term) => print_result(t1) ; print(" "); print_result(t2);
+          case Abs(name:String,body:Term) => print("lambda "+name+". "); print_result(body);
+          case Var(x:Int,_) => print(x)
+          case t:Term if is_numerical(t) => print(num_term(t))
+          case _ => throw NoRulesApply("print_result:Out of rules")
         }
       }
 

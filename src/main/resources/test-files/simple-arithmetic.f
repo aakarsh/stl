@@ -21,3 +21,7 @@ succ 0;
 
 
 
+
+
+lambda x. x
+lambda y. lambda x. x

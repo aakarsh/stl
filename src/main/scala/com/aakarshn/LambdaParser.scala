@@ -76,18 +76,18 @@ class LambdaParser extends RegexParsers {
     walk(t,List[String]())
   }
 
-  def term:Parser[Term] = (
-      value      
-      | IF~term~THEN~term~ELSE~term ^^ {
+  def term:Parser[Term] = (      
+     value
+     | IF~term~THEN~term~ELSE~term ^^ {
           case(_~t1~_~t2~_~t3) => If(t1,t2,t3)
       }
-      | ISZERO~term  ^^ {
+     | ISZERO~term  ^^ {
         case(_~v) => IsZero(v)
       }
-      | SUCC~term ^^ {
+     | SUCC~term ^^ {
         case(_~v) => Succ(v)
       }
-      | PRED~term ^^ {
+     | PRED~term ^^ {
         case(_~v) => Pred(v)
       }
      | lambda
@@ -97,7 +97,8 @@ class LambdaParser extends RegexParsers {
   )
 
   def term_app:Parser[Term] = (
-      atomic ~ term ^^{case (t~a) => App(t,a) }
+    value ~ term ^^{case (t~a) => App(t,a) }     
+    |  atomic ~ term ^^{case (t~a) => App(t,a) }
     | "("~ lambda ~")" ~ term ^^{case (_~t~_~a) => App(t,a) }
     | lambda ~ term ^^{case (t~a) => App(t,a) }
   )
