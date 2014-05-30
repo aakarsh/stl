@@ -22,3 +22,9 @@
   (interactive)
   (ensime-sbt-switch)
   (ensime-sbt-action "test"))
+
+(add-hook 'ensime-mode-hook
+  (lambda()
+    (message "Initialize custom hooks")
+    
+    (define-key ensime-mode-map (kbd "C-b t") 'an/ensime-sbt-do-test)))

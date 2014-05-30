@@ -6,14 +6,35 @@ import java.io._
 
 class LambdaParser extends RegexParsers {
 
+  val SEMI =";"
+  val NEWLINE ="\n"
+
+  def SPACE:Parser[String] = " ".r
+  def ZERO:Parser[String] = "0"
+  def TRUE:Parser[String] = "true"
+  def FALSE:Parser[String] = "false"
+  def ID:Parser[String] =  "[a-z][A-Z0-9]*".r
+  def LAMBDA:Parser[String] =  "lambda".r
+  def DOT:Parser[String] ="."
+  def IF:Parser[String] ="if".r
+  def THEN:Parser[String] ="then".r
+  def ELSE:Parser[String] ="else".r
+  def ISZERO:Parser[String] ="iszero".r
+  def SUCC:Parser[String] ="succ".r
+  def PRED:Parser[String] ="pred".r
+  def COMMA:Parser[String] =",".r
+  def LPAREN:Parser[String] ="("
+  def RPAREN:Parser[String] =")"
+
+
   def value:Parser[Term] = (
-    "0".r^^{_=>  Zero() }      |
-      "true".r^^{_=>  True()}   |
-      "false".r^^{_=> False()}
+    ZERO^^{_=>  Zero() }      |
+    TRUE^^{_=>  True()}   |
+    FALSE^^{_=> False()}
   )
 
   def atomic:Parser[Term] = {
-    "[a-zA-Z0-9]+".r ^^{
+    ID ^^{
       s => s match{
         case _ =>{
           println("atom parser found :"+s)
@@ -24,7 +45,7 @@ class LambdaParser extends RegexParsers {
   }
 
   def lambda:Parser[Term] = {
-    "lambda ".r ~> "[a-zA-Z0-9]+".r~ ".".r~term ^^ {s=>
+    LAMBDA~>ID~DOT~term ^^ {s=>
       println("s:"+s)
       s match {
         case (v~d~body) => {
@@ -35,10 +56,10 @@ class LambdaParser extends RegexParsers {
     }
   }
 
-  def expr:Parser[List[Term]] = repsep(term_top,";") | repsep(term_top,"\n")
+  def expr:Parser[List[Term]] = repsep(term_top,SEMI) | repsep(term_top,"\n")
 
-  //      override def skipWhitespace = false
-  def term_app:Parser[Term] = (term ~" ".r~atomic ^^{s =>
+  
+  def term_app:Parser[Term] = (term ~SPACE~atomic ^^{s =>
     s match {
       case (t~s~a) => App(t,a)
     }}
@@ -61,31 +82,26 @@ class LambdaParser extends RegexParsers {
     walk(t,List[String]())
   }
 
-
   def term:Parser[Term] = (
-    atomic~" ".r~term^^ {s =>
-      s match {
-        case (a1~k~a2) => App(a1,a2)
-      }} |
-      "("~> term <~")"
+      atomic~COMMA~term^^ {
+        case (a1~_~a2) => App(a1,a2)
+      } 
+      | LPAREN~> term <~RPAREN
       | lambda
-      | value
+      | value      
+      | IF~term~THEN~term~ELSE~term ^^ {
+          case(_~t1~_~t2~_~t3) => If(t1,t2,t3)
+      }
+      | ISZERO~term  ^^ {
+        case(_~v) => IsZero(v)
+      }
+      | SUCC~term ^^ {
+        case(_~v) => Succ(v)
+      }
+      | PRED~term ^^ {
+        case(_~v) => Pred(v)
+      }
       | atomic
-      | "if".r~term~"then".r~term~"else".r~term ^^ {
-        s => s match {
-          case("if"~t1~"then"~t2~"else"~t3) => If(t1,t2,t3)
-        }}
-      | """iszero""".r~term  ^^ {
-        case("iszero"~v) => IsZero(v)
-      }
-      |"succ".r~term ^^ {
-        case("succ"~v) =>
-          Succ(v)
-      }
-      |"pred".r~term ^^ {
-        case("pred"~v) =>
-          Pred(v)
-      }
   )
 
   def expression_parser = expr
@@ -103,4 +119,14 @@ class LambdaParser extends RegexParsers {
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
+
+  def fromString[T](p:Parser[T],s:String):T =
+    parseAll(p,s) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+   }
+
+  def fromStringTerm(s:String):Term = fromString[Term](term,s)
+
+
 }

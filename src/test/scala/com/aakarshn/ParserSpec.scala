@@ -7,13 +7,39 @@ import Evaluator._
 
 class ParserSpec extends UnitSpec {
 
-  "Term Parser" should "parse values" in {
-    val p = new LambdaParser()
-    p.parseAll(p.term,"0")
+  val parser = new LambdaParser()
 
-    require(Zero() == parse1("0"),"Failed parsing value 0")
-    require(True() == parse1("true"),"Failed parsing value true")
-    require(False() == parse1("false"),"Failed parsing value false")
+  "Term parser" should "parse lambda " in {
+    val v = parser.fromStringTerm("lambda x. x")
+    require(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
+  }
+
+  it should "parse simple nested lambda " in {
+    val v = parser.fromStringTerm("lambda x. lambda z. x")
+    require(Abs("x",Abs("z",UnresolveVar("x"))) == v,"nested lambda 2")
+  }
+
+  it should "application parsing" in {
+    val v =parser.fromStringTerm("x,x,x")
+    println("Application parsing "+v)
+  }
+
+  it should "parse if" in {
+    val v = parser.fromStringTerm("if true then 0 else 0")
+    require(v == If(True(),Zero(),Zero()),"failing in parsing got "+v)
+  }
+
+  it should "parse succ" in {
+    val v = parser.fromStringTerm("succ succ 0")
+    require(v == Succ(Succ(Zero())),"failing in parsing got "+v)
+    val k = parser.fromStringTerm("succ pred 0")
+    require(k == Succ(Pred(Zero())),"failing in parsing got "+k)
+  }
+
+  it should "parse simple" in {
+    require(Zero() == parser.fromStringTerm("0"),"Failed parsing value 0")
+    require(True() == parser.fromStringTerm("true"),"Failed parsing value true")
+    require(False() == parser.fromStringTerm("false"),"Failed parsing value false")
   }  
 
   /**

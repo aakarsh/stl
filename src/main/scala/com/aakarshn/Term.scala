@@ -4,7 +4,6 @@ import java.io._
 
 package com.aakarshn {
 
-
     abstract class EvalException extends Throwable
 
     case class NoRulesApply(s:String) extends  EvalException
@@ -26,6 +25,7 @@ package com.aakarshn {
         // Now that 0 has been substituted
         // Shift back variables in the program body
         substituted_body.lshift(1)
+
       }
 
       /**
@@ -61,7 +61,6 @@ package com.aakarshn {
         }
         walk(c, term)
       }
-
 
       /**
         Walk through the program AST.
@@ -121,6 +120,5 @@ package com.aakarshn {
     case class UnresolveVar(x:String) extends Term
     case class Abs(name:String,body:Term) extends Term
     case class App(t1:Term, t2:Term) extends Term
-
 
 }
