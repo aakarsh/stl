@@ -8,6 +8,7 @@ import Evaluator._
 class ParserSpec extends UnitSpec {
 
 
+
   "Term Parser" should "parse values" in {
 
     val p = new LCParser()
