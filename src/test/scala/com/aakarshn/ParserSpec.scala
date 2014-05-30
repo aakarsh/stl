@@ -11,6 +11,7 @@ class ParserSpec extends UnitSpec {
   "Term Parser" should "parse values" in {
 
     val p = new LCParser()
+    p.parseAll(term,"0")
 
     require(Zero() == parse1("0"),"Failed parsing value 0")
     require(True() == parse1("true"),"Failed parsing value true")
