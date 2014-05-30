@@ -27,6 +27,7 @@ class ParserSpec extends UnitSpec {
   it should "generate nameless representation " in {
     val v = parser.fromString("lambda x. lambda y. lambda z. x y z")
     require(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0),"hmm")
+    require(Abs("x",App(Var(0,1),Var(0,1))) == parser.fromString("lambda x. x x")(0),"paring simple application")
   }
 
   it should "parse if" in {

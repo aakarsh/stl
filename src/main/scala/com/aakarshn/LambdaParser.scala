@@ -22,7 +22,6 @@ class LambdaParser extends RegexParsers {
   def ISZERO:Parser[String] ="iszero".r
   def SUCC:Parser[String] ="succ".r
   def PRED:Parser[String] ="pred".r
-  def APP_DELIM:Parser[String] =",".r
   def LPAREN:Parser[String] ="("
   def RPAREN:Parser[String] =")"
 
@@ -79,7 +78,6 @@ class LambdaParser extends RegexParsers {
 
   def term:Parser[Term] = (
       LPAREN~> term <~RPAREN
-
       | value      
       | IF~term~THEN~term~ELSE~term ^^ {
           case(_~t1~_~t2~_~t3) => If(t1,t2,t3)
@@ -99,8 +97,8 @@ class LambdaParser extends RegexParsers {
   )
 
   def term_app:Parser[Term] = (
-      atomic /*~ APP_DELIM*/ ~ term ^^{case (t~a) => App(t,a) }
-    | lambda /*~ APP_DELIM*/ ~ term ^^{case (t~a) => App(t,a) }
+      atomic ~ term ^^{case (t~a) => App(t,a) }
+    | lambda ~ term ^^{case (t~a) => App(t,a) }
   )
 
   def expression_parser = expr
