@@ -48,11 +48,11 @@ class EvaluatorSpec extends UnitSpec {
     val v = Evaluator.run("(lambda x. x) true")
     assert(True() == v(0),"Running identity returns identity got:"+v )
 
-//    Evaluator.run("(lambda x. x) (lambda x. x x);")
-
-
-//    val pair = Evaluator.run("(lambda x. lambda y. lambda f. f x y ) true true")
-//    println(pair)
+    Evaluator.run("(lambda x. x x)")
+    Evaluator.run("(lambda x. x x) (lambda x. x) (lambda x. x)")
+//  Evaluator.run("(lambda x. x) ")
+//  val pair = Evaluator.run("(lambda x. lambda y. lambda f. f x y ) true true")
+//   println(pair)
 
   }
 

@@ -20,6 +20,18 @@
   (interactive)
   (an/scala-grep-class-in-dir scala-src-dir (thing-at-point 'symbol)))
 
+(defun an/sbt-last-err()
+  (interactive)
+  (with-current-buffer (get-buffer "*ensime-sbt*<stl>")
+    (save-excursion
+      (goto-char (point-max))
+      (search-backward-regexp "(\\(\\(.*.scala\\):\\([0-9]+\\)\\))" )
+      (let ((file-name (match-string 2))
+            (lineno  (string-to-number (match-string 3))))
+      (message (format "Goto %s line [%d]" file-name lineno))
+      (switch-to-buffer (get-buffer file-name))
+      (goto-line lineno)))))
+
 
 (defun an/scala-grep-class-in-dir-src-go()
   (interactive)

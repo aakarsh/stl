@@ -13,7 +13,7 @@ import java.io._
 class LambdaLexer extends StdLexical with ImplicitConversions { 
 
   reserved ++= List("true", "false","if","then","else","iszero","succ","pred","lambda","let")
-  delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".")
+  delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".",";")
 
   override def token: Parser[Token] =
     (

@@ -2,64 +2,29 @@ package com.aakarshn
 
 import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.lexical._
+import scala.util.parsing.combinator.syntactical._
+import scala.util.parsing.combinator.syntactical.StdTokenParsers
 import scala.util.parsing.combinator.token._
+
+import java.util.regex.Pattern
+import scala.util.matching.Regex
+import scala.util.parsing.input._
+
 import scala.util.parsing.input.CharArrayReader.EofCh
+import scala.collection.immutable.PagedSeq
+import scala.util.parsing.input._
 
 import scala.io.Source
 import java.io._
 
-class LambdaParser extends RegexParsers {
+class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
-  val SEMI =";"
-  val NEWLINE ="\n"
+  type Tokens = LambdaLexer
+  val lexical  = new Tokens
 
-  def SPACE:Parser[String] = " ".r
-  def ZERO:Parser[String] = "0"
-  def TRUE:Parser[String] = "true"
-  def FALSE:Parser[String] = "false"
-  def ID:Parser[String] =  "[a-z][A-Z0-9]*".r
-  def LAMBDA:Parser[String] =  "lambda".r
-  def DOT:Parser[String] ="."
-  def IF:Parser[String] ="if".r
-  def THEN:Parser[String] ="then".r
-  def ELSE:Parser[String] ="else".r
-  def ISZERO:Parser[String] ="iszero".r
-  def SUCC:Parser[String] ="succ".r
-  def PRED:Parser[String] ="pred".r
-  def LPAREN:Parser[String] ="("
-  def RPAREN:Parser[String] =")"
+  import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit}
 
-
-  def value:Parser[Term] = (
-    ZERO^^{_=>  Zero() }      |
-    TRUE^^{_=>  True()}   |
-    FALSE^^{_=> False()}
-  )
-
-  def atomic:Parser[Term] = {
-    ID ^^{
-      s => s match{
-        case _ =>{
-          println("atom parser found :"+s)
-          UnresolveVar(s)
-        }
-      }
-    }
-  }
-
-  def lambda:Parser[Term] = {
-    LAMBDA~>ID~DOT~term ^^ {s=>
-      println("s:"+s)
-      s match {
-        case (v~d~body) => {
-          println("Abstraction :"+v)
-          Abs(v,body);
-        }
-      }
-    }
-  }
-
-  def expr:Parser[List[Term]] = repsep(term_top,SEMI) | repsep(term_top,"\n")
+  def expr:Parser[List[Term]] = repsep(term_top,";") | repsep(term_top,"\n")
   
   def term_top:Parser[Term] = term^^{
     t:Term =>
@@ -80,56 +45,80 @@ class LambdaParser extends RegexParsers {
     walk(t,List[String]())
   }
 
-  def term:Parser[Term] = (    
-     // value ~ term ^^{case (t~a) => App(t,a) }            | 
-     value
-     | IF~term~THEN~term~ELSE~term ^^ {
-          case(_~t1~_~t2~_~t3) => If(t1,t2,t3)
-      }
-     | ISZERO~term  ^^ {
-        case(_~v) => IsZero(v)
-      }
-     | SUCC~term ^^ {
-        case(_~v) => Succ(v)
-      }
-     | PRED~term ^^ {
-        case(_~v) => Pred(v)
-      }
-     | lambda
-     | term_app
-     | LPAREN~> term <~RPAREN
-     | atomic
-  )
+  def term:Parser[Term] = (
+        app_term
+      | number
+      | var_term
+      | string
+      | true_term
+      | false_term
+      | if_term
+      | succ
+      | pred
+      | lambda_term
+      | "("~>term<~")" )
 
-  def term_app:Parser[Term] = (
-      atomic ~ term ^^{case (t~a) => App(t,a) }
-    | "("~ lambda ~")" ~ term ^^{case (_~t~_~a) => App(t,a) }
-    | lambda ~ term ^^{case (t~a) => App(t,a) }
-  )
+  def if_term = Keyword("if")~term~Keyword("then")~term~Keyword("else")~term ^^ {
+      case (_~e1~_~e2~_~e3)  => If(e1,e2,e3)
+  }
 
-  def expression_parser = expr
+  def lambda_term = Keyword("lambda")~>ident~"."~term^^ {
+    case (s~_~t) => Abs(s,t)
+  }
 
-  def fromReader(r:Reader):List[Term] = {
-    parse(expr,r)  match  {
+  def true_term =   Keyword("true")^^^ True()
+  def false_term = Keyword("false")^^^ False()
+  
+  def succ =  Keyword("succ")~term^^{ case (_~e) => Succ(e)  }
+  def pred =  Keyword("pred")~term^^{ case (_~e) => Pred(e)  }
+
+  def app_term = (
+       ("("~>term<~")"
+        | var_term
+        | true_term
+        | false_term) ~ term ^^ { case (v1 ~t ) => App(v1,t)})
+
+  def var_term = accept("string",{
+    case Identifier(s) => UnresolveVar(s)
+  })
+
+  def string = accept("string",{
+    case StringLit(s) => StringTerm(s)
+  })
+
+  def number = accept("number",{
+    case NumericLit(s) => 
+      val n = s.toDouble
+      if (n <= 0) Zero() 
+      else NumberTerm(n.toDouble)
+  })
+
+  def parseRaw(input:String) = phrase(term)(new Scanner(input)) match {
+    case Success(result,_) => Some(result)
+    case f: NoSuccess => scala.sys.error(f.msg)    
+  }
+
+  def fromString(s:String):List[Term] = {
+    phrase(expr)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
 
-  def fromString(s:String):List[Term] = {
-    parseAll(expr,s) match  {
+  import scala.util.parsing.input.Reader;
+
+  def fromReader (r: java.io.Reader) : List[Term] = {
+    phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
 
   def fromString[T](p:Parser[T],s:String):T =
-    parseAll(p,s) match  {
+    phrase (p)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
    }
 
-  def fromStringTerm(s:String):Term = fromString[Term](term,s)
-
-
+  def fromStringTerm(s:String):Term = fromString[Term](term,s)  
 }
