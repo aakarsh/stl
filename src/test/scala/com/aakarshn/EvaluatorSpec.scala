@@ -10,44 +10,43 @@ import Evaluator._
 class EvaluatorSpec extends UnitSpec {
 
   "Numbers" should "be numerical"  in {
-      require(is_numerical(Zero()))
-      require(is_numerical(Succ(Zero())))
-      require(is_numerical(Pred(Zero())))
+      assert(is_numerical(Zero()))
+      assert(is_numerical(Succ(Zero())))
+      assert(is_numerical(Pred(Zero())))
   }
 
   "Values" should "be values" in {
-      require(is_value(True()))
-      require(is_value(False()))
-      require(is_value(Succ(Zero())))
-      require(is_value(Pred(Zero())))
+      assert(is_value(True()))
+      assert(is_value(False()))
+      assert(is_value(Succ(Zero())))
+      assert(is_value(Pred(Zero())))
   }
 
   "Eval" should "work" in {
       // Evaluator tests
-      require(True() == eval(If(True(),True(),False())), "If did not evaluate true correctly")
-      require(False() == eval(If(False(),True(),False())), "If did not evaluate false correctly")
-      require(Succ(Zero()) == eval(Succ(Zero())), "succ evaluated incorrectly")
-      require(Succ(Zero()) == eval(Succ(If(False(),Succ(Zero()),Zero()))), "succ evaluated incorrectly")
-      require(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
-      require(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
+      assert(True() == eval(If(True(),True(),False())), "If did not evaluate true correctly")
+      assert(False() == eval(If(False(),True(),False())), "If did not evaluate false correctly")
+      assert(Succ(Zero()) == eval(Succ(Zero())), "succ evaluated incorrectly")
+      assert(Succ(Zero()) == eval(Succ(If(False(),Succ(Zero()),Zero()))), "succ evaluated incorrectly")
+      assert(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
+      assert(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
   }
 
   "Shifting" should "work" in {
-      require(Var(1,1) == Var(0,0).rshift(1),"term shift")
-      require(Abs("x",Var(0,1)) == Abs("x",Var(0,0)).rshift(1), "term shift abstraction")
+      assert(Var(1,1) == Var(0,0).rshift(1),"term shift")
+      assert(Abs("x",Var(0,1)) == Abs("x",Var(0,0)).rshift(1), "term shift abstraction")
   }
 
   "Identity Eval" should "work" in {
        val id_term = Abs("x",Var(0,0))
-      require(True() == eval(App(id_term,True())),"identiy eval is failing")
-      require(False() == eval(App(id_term,False())),"identiy eval is failing")
-      require(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
+      assert(True() == eval(App(id_term,True())),"identiy eval is failing")
+      assert(False() == eval(App(id_term,False())),"identiy eval is failing")
+      assert(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
   }
 
   "Runner" should "should parse and evaluate simple lambda calculus expressions" in {
-
     val v = Evaluator.run("(lambda x. x) true")
-    require(True() == v(0),"Running identity returns identity got:"+v )
+    assert(True() == v(0),"Running identity returns identity got:"+v )
 
 //    Evaluator.run("(lambda x. x) (lambda x. x x);")
 
@@ -57,11 +56,7 @@ class EvaluatorSpec extends UnitSpec {
 
   }
 
-  /*
-  "Running" should "parse and evaluate from file" in {
-    Evaluator.runFile("test-files/simple-arithmetic.f")
-  }
-  */
+
 
 
 

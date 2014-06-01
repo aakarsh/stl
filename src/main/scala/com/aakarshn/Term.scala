@@ -120,5 +120,5 @@ package com.aakarshn {
     case class UnresolveVar(x:String) extends Term
     case class Abs(name:String,body:Term) extends Term
     case class App(t1:Term, t2:Term) extends Term
-
 }
+

@@ -16,12 +16,6 @@ object Main {
       println("Usage: stl <input-file>")
       return;
     }
-
     Evaluator.runFile(args(0))
   }
-
 }
-
-
-
-
