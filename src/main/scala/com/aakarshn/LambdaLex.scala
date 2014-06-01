@@ -16,8 +16,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
   delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".",";")
 
   override def token: Parser[Token] =
-    (
-      identChar ~ rep( identChar | digit )^^ { case first ~ rest => processIdent(first :: rest mkString "") }
+    (   identChar ~ rep( identChar | digit )^^ { case first ~ rest => processIdent(first :: rest mkString "") }
       | string ^^ StringLit
       | number ~ letter ^^ { case n ~ l => ErrorToken("Invalid number format : " + n + l) }
       | '-' ~> whitespace ~ number ~ letter ^^ { case ws ~ num ~ l => ErrorToken("Invalid number format : -" + num + l) }
@@ -27,8 +26,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | delim
       | '\"' ~> failure("Unterminated string")
       | rep(letter) ^^ checkKeyword
-      | failure("Illegal character")
-    )
+      | failure("Illegal character"))
 
   def checkKeyword(xs : List[Any]) = {
     val strRep = xs mkString ""
@@ -80,23 +78,5 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
 
   val hexDigits = Set[Char]() ++ "0123456789abcdefABCDEF".toArray
   def hexDigit = elem("hex digit", hexDigits.contains(_))
-
-      /*
-  def SPACE:Parser[String] = " ".r
-  def ZERO:Parser[String] = "0"
-  def TRUE:Parser[String] = "true"
-  def FALSE:Parser[String] = "false"
-  def ID:Parser[String] =  "[a-z][A-Z0-9]*".r
-  def LAMBDA:Parser[String] =  "lambda".r
-  def DOT:Parser[String] ="."
-  def IF:Parser[String] ="if".r
-  def THEN:Parser[String] ="then".r
-  def ELSE:Parser[String] ="else".r
-  def ISZERO:Parser[String] ="iszero".r
-  def SUCC:Parser[String] ="succ".r
-  def PRED:Parser[String] ="pred".r
-  def LPAREN:Parser[String] ="("
-  def RPAREN:Parser[String] =")"
-    */
 
 }

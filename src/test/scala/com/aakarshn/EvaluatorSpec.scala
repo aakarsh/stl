@@ -2,10 +2,7 @@ package com.aakarshn
 
 import org.scalatest.FlatSpec
 import org.scalatest.Assertions._
-
-
 import Evaluator._
-
 
 class EvaluatorSpec extends UnitSpec {
 
@@ -50,27 +47,14 @@ class EvaluatorSpec extends UnitSpec {
 
     Evaluator.run("(lambda x. x x)")
     Evaluator.run("(lambda x. x x) (lambda x. x) (lambda x. x)")
-//  Evaluator.run("(lambda x. x) ")
-//  val pair = Evaluator.run("(lambda x. lambda y. lambda f. f x y ) true true")
-//   println(pair)
+
+    val pair = Evaluator.run("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
+//    val hd  = Evaluator.run("(lambda p. p (lambda  )")
+//    println(pair)
 
   }
 
-
-
-
-
-  /**
-  "An empty Set" should "have size 0" in {
-    assert(Set.empty.size == 0)
-  }
-
-  it should "produce NoSuchElementException when head is invoked" in {
-    intercept[NoSuchElementException] {
-      Set.empty.head
-    }
-  }
-  */
+  
 }
 
 

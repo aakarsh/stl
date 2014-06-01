@@ -11,7 +11,10 @@ import com.aakarshn._
   */
 object Main {
 
-  def main(args:Array[String]):scala.Unit= {
+  def main(args:Array[String]): scala.Unit= {
+    if(args(0) == "-i"){
+      Evaluator.repl()
+    }
     if(args.length < 1) {
       println("Usage: stl <input-file>")
       return;
