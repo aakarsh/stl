@@ -1,3 +1,4 @@
+(require 'cl)
 (require 'ensime)
 
 (defvar scala-src-dir "~/src/pub/scala/src")
@@ -31,6 +32,44 @@
       (message (format "Goto %s line [%d]" file-name lineno))
       (switch-to-buffer (get-buffer file-name))
       (goto-line lineno)))))
+
+
+(defun an/line()
+  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+
+(defstruct trace-line line class method file lineno)
+
+(defun an/sbt-parse-trace-line()
+  (interactive)
+  (with-current-buffer (get-buffer "*ensime-sbt*<stl>")
+    (save-excursion 
+      (narrow-to-region (point-at-bol) (point-at-eol))
+      (goto-char (point-min))
+      (search-forward-regexp "^\\[info\\][ ]+at \\(.*\\)\\.\\([a-zA-Z0-9$]+\\)(\\(.*\\(:[0-9]+\\)?\\))")
+      (widen)
+      (let* ((full-line (match-string 0))
+             (class (match-string 1))
+            (method (match-string 2))
+            (file-info  (split-string (match-string 3) ":"))
+            (file-name (car file-info))
+            (line-no  (if (> (length file-info) 1) (string-to-int (cadr file-info )) -1)))
+        (message (format "Class [%s] Method [%s] Filename[%s]Line [%s]" class method file-name line-no))
+        (make-trace-line :line full-line
+                    :class class
+                    :method method
+                    :file file-name
+                    :lineno line-no))
+      )))
+
+(defun an/sbt-trace-follow()
+  (interactive)
+  (let* ((tl (an/sbt-parse-trace-line))
+        (n (trace-line-lineno tl))
+        (f (trace-line-file tl)))
+    (switch-to-buffer (get-buffer f))
+    (if (>  n 0)
+        (goto-line n)
+      (message "No line number"))))      
 
 
 (defun an/scala-grep-class-in-dir-src-go()

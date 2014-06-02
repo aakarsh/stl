@@ -22,11 +22,13 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   type Tokens = LambdaLexer
   val lexical  = new Tokens
 
-  import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit}
+  import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,Semicolon}
 
-  def expr:Parser[List[Term]] = repsep(term_top,";") | repsep(term_top,"\n")
+  def expr:Parser[List[Term]] = rep(term_top<~semi.*) 
+
+  def semi = accept(Semicolon)
   
-  def term_top:Parser[Term] = term^^{
+  def term_top:Parser[Term] = term ^^ {
     t:Term =>
     def walk(p:Term,ctx:List[String]):Term ={
       p match {
@@ -42,7 +44,10 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         case t => t
       }
     }
-    walk(t,List[String]())
+
+    val r = walk(t,List[String]())
+    println("Finished parsing a term "+r)
+    r;
   }
 
   def term:Parser[Term] = (
@@ -55,6 +60,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       | if_term
       | succ
       | pred
+      | iszero
       | lambda_term
       | "("~>term<~")" )
 
@@ -69,6 +75,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def true_term =   Keyword("true")^^^ True()
   def false_term = Keyword("false")^^^ False()
   
+  def iszero =  Keyword("iszero")~term^^{ case (_~e) => IsZero(e)  }
   def succ =  Keyword("succ")~term^^{ case (_~e) => Succ(e)  }
   def pred =  Keyword("pred")~term^^{ case (_~e) => Pred(e)  }
 
@@ -93,9 +100,9 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       else NumberTerm(n.toDouble)
   })
 
-  def parseRaw(input:String) = phrase(term)(new Scanner(input)) match {
+  def parseRaw(input:String): Option[Term] =  phrase(term)(new Scanner(input)) match {
     case Success(result,_) => Some(result)
-    case f: NoSuccess => scala.sys.error(f.msg)    
+    case f: NoSuccess => scala.sys.error(f.msg)
   }
 
   def fromString(s:String):List[Term] = {
@@ -104,8 +111,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
-
-  import scala.util.parsing.input.Reader;
 
   def fromReader (r: java.io.Reader) : List[Term] = {
     phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
@@ -121,4 +126,5 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
    }
 
   def fromStringTerm(s:String):Term = fromString[Term](term,s)  
+
 }

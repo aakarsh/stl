@@ -15,7 +15,6 @@ import Evaluator._
 
 class ParserSpec extends UnitSpec {
 
-//  val parser = new LambdaParser()
   val parser = new LambdaParser()
 
   "Term parser" should "parse lambda " in {
@@ -121,7 +120,7 @@ class ParserSpec extends UnitSpec {
     assertResult(lexical.Keyword("if"),"scanner not getting second token"){scanner.rest.rest.first}
 
 //  TODO failing identifier
-    assertResult(lexical.Keyword("lambda")){new lexical.Scanner("lambda x. true").first}
+    assertResult(lexical.Keyword("lambda")){ new lexical.Scanner("lambda x. true").first }
     assertResult(lexical.Identifier("xoxo")){new lexical.Scanner("lambda xoxo. true").rest.first}
     assertResult(lexical.Identifier("xoxo")){new lexical.Scanner("lambda xoxo. xoxo").rest.rest.rest.first}
 
@@ -129,6 +128,21 @@ class ParserSpec extends UnitSpec {
 //    assert(true ==new lexical.Scanner("true"))
 
   }
+
+
+  it should "semicolon as seperator" in {
+    assertResult(List(True(),True()),"") { 
+      parser.fromString("true;true")
+    }
+  }
+
+
+  it should "semicolon as end of input" in {
+    assertResult(List(True()),"") { 
+      parser.fromString("true;")
+    }
+  }
+
 
   /**
 // BREAKING TEST

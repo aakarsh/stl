@@ -25,7 +25,6 @@ package com.aakarshn {
         // Now that 0 has been substituted
         // Shift back variables in the program body
         substituted_body.lshift(1)
-
       }
 
       /**
@@ -38,7 +37,6 @@ package com.aakarshn {
       def rshift(d:Int):Term = term_shift(d,0,this)
 
       def lshift(d:Int):Term = this.rshift(-1)
-
 
       def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
         /**

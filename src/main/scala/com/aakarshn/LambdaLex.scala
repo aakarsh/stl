@@ -13,7 +13,12 @@ import java.io._
 class LambdaLexer extends StdLexical with ImplicitConversions { 
 
   reserved ++= List("true", "false","if","then","else","iszero","succ","pred","lambda","let")
-  delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".",";")
+  delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".")
+
+
+  case object Semicolon extends Token {
+    def chars = ";"
+  }
 
   override def token: Parser[Token] =
     (   identChar ~ rep( identChar | digit )^^ { case first ~ rest => processIdent(first :: rest mkString "") }
@@ -23,6 +28,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | '-' ~> whitespace ~ number ^^ { case ws ~ num => NumericLit("-" + num) }
       | number ^^ NumericLit
       | EofCh ^^^ EOF
+      | ';' ^^^ Semicolon
       | delim
       | '\"' ~> failure("Unterminated string")
       | rep(letter) ^^ checkKeyword

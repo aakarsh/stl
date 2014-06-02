@@ -111,9 +111,11 @@ package com.aakarshn {
         if(line == ":q"){
           ok = false
         }
-
-        if(ok)
-          println(run(line))
+        if(ok){
+          val res = run(line)
+          println(res)
+          print_results(run(line))
+        }
       }
     }
 
@@ -137,6 +139,7 @@ package com.aakarshn {
       def nt(acc:Int, n:Term):Int =
         n match {
           case Zero() => acc
+          case NumberTerm(n:Double) => n.toInt
           case Succ(t1 :Term) => nt(acc+1,t1)
           case Pred(t1:Term)  => nt(acc-1,t1)
           case _ => throw NoRulesApply("num_term:Not a number")
