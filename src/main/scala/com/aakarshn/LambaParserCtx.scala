@@ -27,42 +27,23 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   import Syntax._
 
   def expr:Parser[List[CtxTerm]] = rep(term<~semi.*) 
-  /**
-  def cmd:Parser[(CtxTerm,Context)] = term | ident~binder ^^ {
-    {case (s~b) =>
-        (ctx:Context) => { 
-          (Bind(s,(ctx)), 
-            addName(ctx,s))
 
-    }
-  }}
-  */
-
-/**
-[error] /home/aakarsh/src/scala/stl/src/main/scala/com/aakarshn/LambaParserCtx.scala:54: type mismatch;
-[error]  found   : (List[com.aakarshn.Syntax.Command], com.aakarshn.Syntax.Context)
-[error]  required: com.aakarshn.Syntax.Context => (List[com.aakarshn.Syntax.Command], com.aakarshn.Syntax.Context)
-[error]     (which expands to)  List[(String, com.aakarshn.Syntax.Binding)] => (List[com.aakarshn.Syntax.Command], List[(String, com.aakarshn.Syntax.Binding)])
-[error]         (List[Command](),emptycontext)
-[error]         
-
-*/
   def cmds:Parser[CtxCmds] =   rep(cmd<~semi.*) ^^  {  
-        lst =>  //Context=>(List[Command],Context)
+        lst:List[CtxCmd] =>  
         ctx:Context =>
-       /*
-        case (cmds:List[Command],ctx:Context)  =>
-          x:Context => {
+        def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
+          val (rcmd,rctx)= cmd(ctx)
+          (rcmd::acc,rctx)
+         }
 
-        cmds.foldLeft((List[Command](),ctx)){
-          case ((cmd:Command,ctx:Context),(acc_cmds,acc_ctx)) =>
-          val c,ct = cmd(ctx)
-          (c::acc_cmds,ct)
+        var rctx = ctx;
+        var rcmds = List[Command]();
+        for(c <-lst) {
+          val k = r(c,rctx,rcmds)
+          rcmds = k._1
+          rctx  = k._2
         }
-
-          }
-        */
-    (List[Command](),emptycontext)
+       (rcmds,rctx)
   }
 
 
