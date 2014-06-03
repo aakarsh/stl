@@ -12,6 +12,7 @@ import scala.util.parsing.combinator.syntactical.StdTokenParsers
 import scala.util.parsing.combinator.syntactical._
 
 import Evaluator._
+import Syntax._
 
 class LexSpec extends UnitSpec {
 

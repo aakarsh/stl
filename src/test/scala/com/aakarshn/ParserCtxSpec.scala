@@ -12,16 +12,19 @@ import scala.util.parsing.combinator.syntactical.StdTokenParsers
 import scala.util.parsing.combinator.syntactical._
 
 import Evaluator._
+import Syntax._
+class ParserCtxSpec extends UnitSpec {
 
-class ParserSpec extends UnitSpec {
-
-  val parser = new LambdaParser()
+  val parser = new LambdaParserCtx()
 
   "Term parser" should "parse lambda " in {
-    val v = parser.fromStringTerm("lambda x. x")
-    assert(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
-  }
+    val evalit = parser.fromStringTerm("lambda x. x",emptycontext)
 
+    val it = evalit(emptycontext) // Contexted term
+    println(it);
+//    assert(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
+  }
+  /*
   it should "parse simple nested lambda " in {
     val v = parser.fromStringTerm("lambda x. lambda z. x")
     assert(Abs("x",Abs("z",UnresolveVar("x"))) == v,"nested lambda 2")
@@ -58,14 +61,6 @@ class ParserSpec extends UnitSpec {
     assert(True() == parser.fromStringTerm("true"),"Failed parsing value true")
     assert(False() == parser.fromStringTerm("false"),"Failed parsing value false")
   }  
-
-  /**
-  it should "parse variable"  in {
-    val p = parse1("x")
-    println(p)
-    assert(UnresolveVar("x") == p)
-  }
-   */
 
 
   "Parser" should "parse simple arithmetic expressions" in {
@@ -143,6 +138,12 @@ class ParserSpec extends UnitSpec {
     }
   }
 
+  it should "parse let statement" in {
+    assertResult(List(Let("x",True(),Var(0,1))),"") {
+      parser.fromString("let x=true in x");
+    }
+  }
+   */
 
   /**
 // BREAKING TEST
@@ -150,6 +151,15 @@ class ParserSpec extends UnitSpec {
     parser.fromString("(lambda x. lambda y. lambda f. f x y) true true")
   }
   */
+
+  /**
+  it should "parse variable"  in {
+    val p = parse1("x")
+    println(p)
+    assert(UnresolveVar("x") == p)
+  }
+   */
+
 }
 
 

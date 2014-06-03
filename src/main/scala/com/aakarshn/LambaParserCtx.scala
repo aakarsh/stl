@@ -16,28 +16,36 @@ import scala.util.parsing.input._
 
 import scala.io.Source
 import java.io._
+import Syntax._;
 
-class LambdaParser extends StdTokenParsers with ImplicitConversions  {
-  import Syntax._;
+class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
+
   type Tokens = LambdaLexer
   val lexical  = new Tokens
 
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
+  import Syntax._
 
-  def expr:Parser[List[Term]] = rep(term_top<~semi.*) 
+//  type ParseResults = (List[Term],Context)
+//  type ParseResult = (Term,Context)
+
+  def expr:Parser[List[CtxTerm]] = rep(term<~semi.*) 
 
   def semi = accept(SpecialChar(';'))
   
-  def term_top:Parser[Term] = term ^^ {
-    t:Term =>
-    def walk(p:Term,ctx:List[String]):Term ={
+//  def binder = ident~lexical.Slash
+  def term_top:Parser[CtxTerm] = term /** ^^ {
+
+    //ctx:Context=> 
+    t:Term => {
+    def walk(p:Term,ctx:List[String]): Term = {
       p match {
         case UnresolveVar(x) => {
           val index = ctx.indexOf(x)
           if(index >= 0)
             Var(index,ctx.length)
           else
-            throw new RuntimeException("Unable to variable binder for :"+x+"\n In Contex "+ctx)
+            throw new RuntimeException("Unable to variable binder for :"+x+"\n In Context "+ ctx)
         }
         case App(t1:Term,t2:Term) => App(walk(t1,ctx),walk(t2,ctx))
         case Abs(name:String,body:Term) => Abs(name,walk(body,name::ctx))
@@ -45,10 +53,17 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         case t => t
       }
     }
-    walk(t,List[String]())
-  }
+    //hmmm
 
-  def term:Parser[Term] = (
+    {ctx:Context =>
+      (walk(t,List[String]()))
+    }}
+
+
+  }      */
+
+
+  def term:(Parser[CtxTerm]) = (
         app_term
       | number
       | var_term
@@ -65,69 +80,87 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
   def let_term = Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
     case(_~e1~_~e2~_~e3) =>
-      Let(e1,e2,e3)
+      {
+        ctx:Context =>
+        Let(e1,e2(ctx),e3(ctx))
+      }
   }
 
   def if_term = Keyword("if")~term~Keyword("then")~term~Keyword("else")~term ^^ {
-      case (_~e1~_~e2~_~e3)  => If(e1,e2,e3)
+      case (_~e1~_~e2~_~e3)  => 
+      {ctx:Context =>
+         If(e1(ctx),e2(ctx),e3(ctx))}
   }
 
   def lambda_term = Keyword("lambda")~>ident~"."~term^^ {
-    case (s~_~t) => Abs(s,t)
+    case (s~_~t) => 
+      {ctx:Context =>
+        val ctx1 = addName(ctx,s)
+        Abs(s,t(ctx1))}
   }
 
-  def true_term =   Keyword("true")^^^ True()
-  def false_term = Keyword("false")^^^ False()
+  def true_term =   Keyword("true")^^^ ({ctx:Context => True()})
+  def false_term = Keyword("false")^^^ ({ctx:Context => False()})
   
-  def iszero =  Keyword("iszero")~term^^{ case (_~e) => IsZero(e)  }
-  def succ =  Keyword("succ")~term^^{ case (_~e) => Succ(e)  }
-  def pred =  Keyword("pred")~term^^{ case (_~e) => Pred(e)  }
+  def iszero =  Keyword("iszero")~term^^{ case (_~e) => {ctx:Context => IsZero(e(ctx))}  }
+  def succ =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => Succ(e(ctx)) } }
+  def pred =  Keyword("pred")~term^^{ case (_~e) => {ctx:Context => Pred(e(ctx)) } }
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
-  def app_term = (
-       ("("~>term<~")" | var_term | true_term | false_term)
-         ~ term ^^ { case (v1 ~t ) => App(v1,t)})
+  def app_term = ((
+    "("~>term<~")" 
+     | var_term 
+     | true_term 
+     | false_term)~ term ^^ { 
+    case (v1~t) => 
+      { ctx:Context => App(v1(ctx),t(ctx)) }
+})
 
   def var_term = accept("string",{
-    case Identifier(s) => UnresolveVar(s)
+    case Identifier(s) => 
+      ctx:Context =>
+         Var(name2Index(ctx,s),ctx.length)
+      //UnresolveVar(s)
   })
 
   def string = accept("string",{
-    case StringLit(s) => StringTerm(s)
+    case StringLit(s) => 
+      ctx:Context => StringTerm(s)
   })
 
   def number = accept("number",{
     case NumericLit(s) => 
-      val n = s.toDouble
-      if (n <= 0) Zero() 
-      else NumberTerm(n.toDouble)
+      ctx:Context =>
+          val n = s.toDouble
+          if (n <= 0) Zero()
+          else NumberTerm(n.toDouble)
   })
 
-  def parseRaw(input:String): Option[Term] =  phrase(term)(new Scanner(input)) match {
+  def parseRaw(input:String, ctx:Context): Option[CtxTerm] =  phrase(term)(new Scanner(input)) match {
     case Success(result,_) => Some(result)
     case f: NoSuccess => scala.sys.error(f.msg)
   }
 
-  def fromString(s:String):List[Term] = {
+  def fromString(s:String,ctx:Context) : List[CtxTerm] = {
     phrase(expr)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
 
-  def fromReader (r: java.io.Reader) : List[Term] = {
+  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = {
     phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
   }
 
-  def fromString[T](p:Parser[T],s:String):T =
+  def fromString[T](p:Parser[T],s:String,ctx:Context):T =
     phrase (p)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
    }
 
-  def fromStringTerm(s:String):Term = fromString[Term](term,s)  
+  def fromStringTerm(s:String,ctx:Context):CtxTerm = fromString[CtxTerm](term,s,ctx)  
 
 }

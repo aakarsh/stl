@@ -77,6 +77,19 @@
   (save-window-excursion (an/scala-grep-class-in-dir-src))
   (an/grep-go 1 4))
 
+(defun an/last-msg()
+  (save-excursion
+    (let ((line ""))
+      (with-current-buffer (get-buffer "*Messages*")
+        (goto-char (point-max))
+        (setf line (an/line)))
+      line)))
+
+(defun an/insert-last-msg()
+  (interactive)
+  (insert (an/last-msg)))
+
+
 (defun an/grep-go(n timout)
   (with-current-buffer (get-buffer "*grep*") 
     (sleep-for timout)
@@ -111,4 +124,5 @@
 (add-hook 'ensime-mode-hook
   (lambda()
     (message "Initialize custom hooks")    
+    (define-key ensime-mode-map (kbd "C-c b t") 'ensime-sbt-do-compile)
     (define-key ensime-mode-map (kbd "C-c C-b t") 'an/ensime-sbt-do-test)))

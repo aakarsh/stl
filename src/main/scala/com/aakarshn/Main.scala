@@ -15,10 +15,12 @@ object Main {
     if(args(0) == "-i"){
       Evaluator.repl()
     }
+    
     if(args.length < 1) {
       println("Usage: stl <input-file>")
       return;
     }
-    Evaluator.runFile(args(0))
+
+    //Evaluator.runFile(args(0))
   }
 }

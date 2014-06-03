@@ -20,8 +20,5 @@ succ (succ (pred 0));
 succ 0;
 
 
-
-
-
-lambda x. x
-lambda y. lambda x. x
+lambda x. x;
+lambda y. lambda x. x;
