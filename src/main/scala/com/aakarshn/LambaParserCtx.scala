@@ -26,14 +26,71 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
   import Syntax._
 
-//  type ParseResults = (List[Term],Context)
-//  type ParseResult = (Term,Context)
-
   def expr:Parser[List[CtxTerm]] = rep(term<~semi.*) 
+  /**
+  def cmd:Parser[(CtxTerm,Context)] = term | ident~binder ^^ {
+    {case (s~b) =>
+        (ctx:Context) => { 
+          (Bind(s,(ctx)), 
+            addName(ctx,s))
+
+    }
+  }}
+  */
+
+/**
+[error] /home/aakarsh/src/scala/stl/src/main/scala/com/aakarshn/LambaParserCtx.scala:54: type mismatch;
+[error]  found   : (List[com.aakarshn.Syntax.Command], com.aakarshn.Syntax.Context)
+[error]  required: com.aakarshn.Syntax.Context => (List[com.aakarshn.Syntax.Command], com.aakarshn.Syntax.Context)
+[error]     (which expands to)  List[(String, com.aakarshn.Syntax.Binding)] => (List[com.aakarshn.Syntax.Command], List[(String, com.aakarshn.Syntax.Binding)])
+[error]         (List[Command](),emptycontext)
+[error]         
+
+*/
+  def cmds:Parser[CtxCmds] =   rep(cmd<~semi.*) ^^  {  
+        lst =>  //Context=>(List[Command],Context)
+        ctx:Context =>
+       /*
+        case (cmds:List[Command],ctx:Context)  =>
+          x:Context => {
+
+        cmds.foldLeft((List[Command](),ctx)){
+          case ((cmd:Command,ctx:Context),(acc_cmds,acc_ctx)) =>
+          val c,ct = cmd(ctx)
+          (c::acc_cmds,ct)
+        }
+
+          }
+        */
+    (List[Command](),emptycontext)
+  }
+
+
+
+
+  def cmd:Parser[CtxCmd]=  (
+        term^^{ case ctxTrm =>
+                    ctx:Context =>
+                        val t = ctxTrm(ctx)
+                        (Eval(t),ctx)
+        }
+      | ident~binder^^{ case (s~ctxBind) =>
+                             ctx:Context =>
+                                  val b = ctxBind(ctx)
+                                  (Bind(s,b), addName(ctx,s))
+      })
+  
+
 
   def semi = accept(SpecialChar(';'))
-  
-//  def binder = ident~lexical.Slash
+
+
+  def binder:Parser[CtxBind] = 
+    (SpecialChar('\\')^^{
+      case (_) => {(ctx:Context) => NameBinding() }}
+    |SpecialChar('=')~term^^{
+      case (_~t) =>{(ctx:Context) => TmAbbBind(t(ctx))}})
+
   def term_top:Parser[CtxTerm] = term /** ^^ {
 
     //ctx:Context=> 

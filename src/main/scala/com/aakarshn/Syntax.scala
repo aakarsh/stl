@@ -10,9 +10,21 @@ object Syntax {
 
   case class NoRulesApply(s:String) extends  EvalException
   type CtxTerm = Context => Term
+  type CtxBind= Context => Binding
+
+  type CtxCmd = Context=>(Command,Context)
+  type CtxCmds = Context=>(List[Command],Context)
+
+  abstract class Command;
+  case class Eval(term:Term) extends Command
+  case class Bind(variable:String,b:Binding) extends Command
+
+
+
   abstract class Binding;
   case class NameBinding extends Binding;
   case class VarBinding extends Binding;
+  case class TmAbbBind(t:Term) extends Binding;
 
   // String variable name
   // Binding - VarBinding or NameBinding
@@ -159,8 +171,7 @@ object Syntax {
   case class App(t1:Term, t2:Term) extends Term
   case class Let(x:String,t1:Term, t2:Term) extends Term
 
-  case class Bind(x:String,t1:Term) extends Term
-  case class Eval(t:Term) extends Term
+
 
 }
 
