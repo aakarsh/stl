@@ -109,6 +109,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
   def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})  
+
   def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~e) => 
     {ctx:Context =>
        val (rterm,rctx) = e(ctx)
@@ -162,52 +163,20 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
    *  Begin parsing interaface here.
    */ 
 
+
   /**
     * Used to process multiple semi-colon seperated commands
     */
-  def parseCommands(s:String) : List[CtxCmd] = {
-    phrase(cmds)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
+  def parseCommands(s:String) : List[CtxCmd] = withParser(cmds,s)
 
-  def parseCommand(s:String) : CtxCmd = {
-    phrase(cmd)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
+  def parseCommand(s:String) : CtxCmd = withParser(cmd,s) 
 
+  def parseExpression(s:String,ctx:Context) : List[CtxTerm] =  withParser(expr,s)
 
-  def parseExpression(s:String,ctx:Context) : List[CtxTerm] = {
-    val lst = phrase(expr)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-    lst
-  }
+  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = withParser(expr,r)
+  def parseReader(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
 
-  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = {
-    phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
-
-  def parseReader(r: java.io.Reader) : List[CtxCmd] = {
-    phrase(cmds)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
-
-  def parseReader(s: String) : List[CtxCmd] = {
-    phrase(cmds)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
+  def parseReader(s: String) : List[CtxCmd] = withParser(cmds,s)
 
 
   def fromString[T](p:Parser[T],s:String):T =
@@ -215,6 +184,19 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
    }
+
+  def withParser[T](p:Parser[T],s:String):T =
+    phrase (p)(new Scanner(s)) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+   }
+
+  def withParser[T] (p:Parser[T],r: java.io.Reader) : T = {
+    phrase(p)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
 
   def parseFirstTerm(s:String) :Term = parse(s,emptycontext)(0)
 
@@ -235,6 +217,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     for(c <- lst) {
       val k = r(c,rctx,rtms);
       rtms = k._1
+      println("rtms "+rtms);
       rctx = k._2
     }
     rtms

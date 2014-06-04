@@ -20,10 +20,24 @@ class ParseEvalSpec extends UnitSpec {
 
   }
 
-  it should "parse true and false" in {
-      assertResult(List(True(),False()),"multi expression parsing not working"){
-        run("true;false\n")
+  it should "parse true" in {
+      assertResult(True(),"true is true"){
+        runFirst("true;\n")
       }
+  }
+
+  it should "parse false" in {
+      assertResult(False(),"false is false"){
+        runFirst("false;\n")
+      }
+  }
+  it should "parse true and false" in {
+    val terms = parser.parse("true;false",emptycontext)
+    assertResult(True(),"first parsed term is true "){terms(0)}
+    assertResult(List(True(),False()),"multi expression parsing not working"){
+      run("true;false\n")
+    }
+
   }
 
   it should "parse and evaluate simple lambda calculus expressions" in {
