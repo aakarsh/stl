@@ -106,13 +106,12 @@ object Evaluator  {
     processCommandList(cmds,ctx)
   }
 
-  def processFile(in_file:String) :Context = 
-    processFile(in_file,emptycontext)
+  def processFile(in_file:String):Context =   processFile(in_file,emptycontext)
 
 
   def processFile(in_file:String,ctx:Context):Context ={
     val reader  = new FileReader(in_file);
-    val lst:List[CtxCmd] = parser.parseReader(reader);
+    val lst:List[CtxCmd] = parser.parseCommands(reader);
     processCommandList(lst,ctx)
   }
 

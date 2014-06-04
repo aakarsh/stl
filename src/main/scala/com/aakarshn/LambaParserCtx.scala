@@ -168,22 +168,21 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     * Used to process multiple semi-colon seperated commands
     */
   def parseCommands(s:String) : List[CtxCmd] = withParser(cmds,s)
-  def parseReader(s: String) : List[CtxCmd] = withParser(cmds,s)
-  def parseReader(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
+  def parseCommands(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
 
   def parseCommand(s:String) : CtxCmd = withParser(cmd,s) 
 
   def parseExpression(s:String,ctx:Context) : List[CtxTerm] =  withParser(expr,s)
-  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = withParser(expr,r)
+//  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = withParser(expr,r)
 
-  def withParser[T](p:Parser[T],s:String):T =
-    phrase (p)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-   }
+  def withParser[T](p:Parser[T],s:String):T = 
+    withParser(p,new Scanner(s))
 
-  def withParser[T] (p:Parser[T],r: java.io.Reader) : T = {
-    phrase(p)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
+  def withParser[T] (p:Parser[T],r: java.io.Reader) : T = 
+    withParser(p,new Scanner(new PagedSeqReader(PagedSeq.fromReader(r))))
+
+  def withParser[T] (p:Parser[T],s:Scanner) : T =  {
+    phrase(p)(s) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
