@@ -37,7 +37,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
           val (rcmd,rctx)= cmd(ctx)
           (rcmd::acc,rctx)
         }
-
         var rctx = ctx;
         var rcmds = List[Command]();
 
@@ -99,9 +98,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     {ctx:Context =>
       (walk(t,List[String]()))
     }}
-
-
-  }      */
+  } 
+*/
 
   def term:(Parser[CtxTerm]) = (
       app_term
@@ -163,7 +161,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   def pred:Parser[CtxTerm] =  Keyword("pred")~term^^{ case (_~e) => {ctx:Context =>
     val (rterm,rctx) = e(ctx)
     (Pred(rterm),rctx)
-//    Pred(e(ctx)) 
   }}
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
@@ -171,13 +168,11 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     ("("~>term<~")"| var_term | true_term | false_term )~term ^^ { 
     case (v1~t) => 
       { ctx:Context => 
-             val r1tm = v1(ctx)
+             val (r1tm,_) = v1(ctx)
              val (r2tm,_) = t(ctx)
-//             (App(v1,r2tm),ctx)
-//        App(v1(ctx),t(ctx)) 
-        (Unit(),ctx)
+             (App(r1tm,r2tm),ctx)
       }
-})
+    })
 
   def var_term:Parser[CtxTerm] = accept("string",{
     case Identifier(s) => 
@@ -211,7 +206,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-  def f2(s:String,ctx:Context) : CtxCmds = {
+  def parseCommands(s:String,ctx:Context) : CtxCmds = {
     phrase(cmds)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)

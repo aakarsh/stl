@@ -25,10 +25,20 @@ class ParserCtxSpec extends UnitSpec {
 //    assert(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
   }
 
-  it should "Return Eval" in {
-    val v = parser.f2("lambda x. x",emptycontext)
-    val term = v(emptycontext)
-    println(term)
+  it should "return eval" in {
+
+    assertResult((List
+      (Eval(Abs("x",Var(0,1)))),List(("x",NameBinding()))),""){
+      val v = parser.parseCommands("lambda x. x",emptycontext)
+      val term = v(emptycontext)
+      println(term)
+      term
+    }
+
+    //?identifier expected??
+    //println(parser.parseCommands("x.\\;",emptycontext))
+
+
   }
 
   /*
