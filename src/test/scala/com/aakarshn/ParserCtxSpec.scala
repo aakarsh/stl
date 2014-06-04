@@ -35,6 +35,19 @@ class ParserCtxSpec extends UnitSpec {
       term
     }
 
+    assertResult((List(Eval(Abs("y",Abs("x",App(Var(0,2),Var(1,2)))))),List(("x",NameBinding()), ("y",NameBinding()))),""){
+      val v = parser.parseCommands("lambda y. (lambda x. x y)",emptycontext)
+      /*
+       (List(
+       Eval(Abs(y,Abs(x,App(Var(0,2),Var(0,2)))))),List((y,NameBinding())))
+       */
+      //Expected (List(Eval(Abs(x,Var(0,1)))),List((x,NameBinding()))), but got 
+      //(List(Eval(Abs(y,Abs(x,App(Var(0,2),Var(0,2)))))),List((y,NameBinding())))
+      val term = v(emptycontext)
+      println(term)
+      term
+    }
+
     //?identifier expected??
     //println(parser.parseCommands("x.\\;",emptycontext))
 

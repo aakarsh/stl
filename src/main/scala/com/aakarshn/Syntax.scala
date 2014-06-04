@@ -50,7 +50,7 @@ object Syntax {
   def name2Index(ctx:Context,x:String):Int =
     ctx match {
       case Nil => throw new java.lang.RuntimeException("name " +x+" not found");
-      case (s,_)::rest => if (x == s) 0 else (name2Index(rest,x))
+      case (s,_)::rest => if (x == s) 0 else 1+(name2Index(rest,x))
     }
 
 

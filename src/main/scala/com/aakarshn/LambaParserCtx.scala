@@ -64,7 +64,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   def semi = accept(SpecialChar(';'))
 
-
   def binder:Parser[CtxBind] = 
     (SpecialChar('\\')^^{
       case (_) => {(ctx:Context) => NameBinding() }}
@@ -140,8 +139,10 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     case (s~_~t) => 
       {ctx:Context =>
         val rctx = addName(ctx,s)
-        val (rtm,_) = t(rctx)
-        (Abs(s,rtm),rctx)
+        val (rtm,rctx2) = t(rctx)
+        println("adding name "+s);
+        println("adding ctx "+ rctx2);
+        (Abs(s,rtm),rctx2)
    }}
 
   def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
@@ -177,7 +178,9 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   def var_term:Parser[CtxTerm] = accept("string",{
     case Identifier(s) => 
       ctx:Context =>
-        (Var(name2Index(ctx,s),ctx.length),ctx)
+      val indx = name2Index(ctx,s)
+      println("Saw Var :"+s+" Ctx"+ctx+"index "+indx)
+        (Var(indx,ctx.length),ctx)
       //UnresolveVar(s)
   })
 
