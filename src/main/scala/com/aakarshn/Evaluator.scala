@@ -102,7 +102,7 @@ object Evaluator  {
 
 
   def processString(s :String , ctx: Context) = {
-    val cmds:List[CtxCmd] = parser.parseReader(s);
+    val cmds:List[CtxCmd] = parser.parseCommands(s);
     processCommandList(cmds,ctx)
   }
 

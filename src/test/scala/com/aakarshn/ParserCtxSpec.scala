@@ -19,7 +19,7 @@ class ParserCtxSpec extends UnitSpec {
   val parser = new LambdaParserCtx()
 
   "Parser" should "parse slash" in {
-    val term = parser.parseReader("x \\;")
+    val term = parser.parseCommands("x \\;")
     println(term);
   }
 

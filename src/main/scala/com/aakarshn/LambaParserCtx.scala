@@ -168,22 +168,13 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     * Used to process multiple semi-colon seperated commands
     */
   def parseCommands(s:String) : List[CtxCmd] = withParser(cmds,s)
+  def parseReader(s: String) : List[CtxCmd] = withParser(cmds,s)
+  def parseReader(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
 
   def parseCommand(s:String) : CtxCmd = withParser(cmd,s) 
 
   def parseExpression(s:String,ctx:Context) : List[CtxTerm] =  withParser(expr,s)
-
   def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = withParser(expr,r)
-  def parseReader(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
-
-  def parseReader(s: String) : List[CtxCmd] = withParser(cmds,s)
-
-
-  def fromString[T](p:Parser[T],s:String):T =
-    phrase (p)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-   }
 
   def withParser[T](p:Parser[T],s:String):T =
     phrase (p)(new Scanner(s)) match  {
@@ -223,7 +214,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     rtms
   }
 
-  def fromStringTerm(s:String):CtxTerm = fromString[CtxTerm](term,s)  
+  def fromStringTerm(s:String):CtxTerm = withParser(term,s)  
 
   def SEMICOLON = accept(SpecialChar(';'))
   def SLASH = accept(SpecialChar('\\'))
