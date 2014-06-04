@@ -30,35 +30,13 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
   import Syntax._
 
-
-
   def cmds:Parser[List[CtxCmd]] =   rep(cmd<~SEMICOLON.*)
-  /*
- ^^  {  
-        lst:List[CtxCmd] =>  
-        ctx:Context =>
-        def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
-          val (rcmd,rctx)= cmd(ctx)
-          (rcmd::acc,rctx)
-        }
-        var rctx = ctx;
-        var rcmds = List[Command]();
-
-        for(c <-lst) {
-          val k = r(c,rctx,rcmds)
-          rcmds = k._1
-          rctx  = k._2
-        }
-
-       (rcmds,rctx)
-  }
-   */
 
   def cmd:Parser[CtxCmd]=  
      ( term^^{ 
          case ctxTrm => ctx:Context =>
-           val (t,rctx) = ctxTrm(ctx)
-           (Eval(t),rctx)
+         val (t,rctx) = ctxTrm(ctx)
+         (Eval(t),rctx)
      }
      | ident~binder^^{
          case (s~ctxBind) => ctx:Context =>
@@ -75,7 +53,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
         val (rt,rctx) = t(ctx)
         (TmAbbBind(rt))
       }})
-
 
   def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 
 
@@ -95,7 +72,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       | "("~>term<~")"
   )
 
-  def let_term:Parser[CtxTerm] = Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
+  def let_term:Parser[CtxTerm] = 
+    Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
     case(_~e1~_~e2~_~e3) =>
       {
         ctx:Context =>
@@ -133,12 +111,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
        (IsZero(rterm),rctx)
     }}
 
-  /**
-  def simple_term(e:CtxTerm) = { ctx:Context =>
-    val (rterm,rctx) = e(ctx)
-    (TermConstructor(rctx),rctx)
-  }
- */
   def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => 
     val (rterm,rctx) = e(ctx)
     (Succ(rterm),rctx) 
@@ -150,6 +122,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   }}
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
+  //TODO make left associative
   def app_term:Parser[CtxTerm] = (
     ("("~>term<~")"| var_term | true_term | false_term )~term ^^ { 
     case (v1~t) => 

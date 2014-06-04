@@ -60,8 +60,6 @@ class EvaluatorSpec extends UnitSpec {
     val filename = dir+"simple-arithmetic.f"
     Evaluator.processFile(filename,emptycontext);
   }
-
-
   
 }
 

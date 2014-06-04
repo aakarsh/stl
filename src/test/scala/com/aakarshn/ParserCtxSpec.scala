@@ -13,6 +13,7 @@ import scala.util.parsing.combinator.syntactical._
 
 import Evaluator._
 import Syntax._
+
 class ParserCtxSpec extends UnitSpec {
 
   val parser = new LambdaParserCtx()

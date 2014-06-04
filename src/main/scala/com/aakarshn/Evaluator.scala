@@ -59,6 +59,13 @@ object Evaluator  {
       case  IsZero(Pred(t:Term)) => False()
       case  IsZero(t1) => IsZero(eval1(t1,ctx))
       //Lambda Calculus
+      case  Let(name:String,v2:Term,body:Term) if is_value(v2) => {
+        body.substitute(v2)
+      }
+      case  Let(name:String,t2:Term,body:Term) => {
+        Let(name,eval1(t2,ctx),body)
+      }
+        //
       case App(Abs(name:String,body:Term),v2) if is_value(v2) => {
         //println("Substituting value in abstraction "+x);
         body.substitute(v2)
@@ -76,9 +83,6 @@ object Evaluator  {
     }
   }
 
-  // def eval(term:Term):Term = {
-  //   eval(term,emptycontext)
-  // }
 
   def eval_empty(term:Term):Term = {
     eval(term,emptycontext)
@@ -94,8 +98,8 @@ object Evaluator  {
   }
 
   def processString(s :String , ctx: Context) = {
-    val lst:List[CtxCmd] = parser.parseReader(s);
-    processCommandList(lst,ctx)
+    val cmds:List[CtxCmd] = parser.parseReader(s);
+    processCommandList(cmds,ctx)
   }
 
   def processFile(in_file:String) :scala.Unit = {
@@ -181,11 +185,9 @@ object Evaluator  {
     t.map(eval(_,ctx))
   }
 
-
   def run1(prog: String,ctx:Context) = {
     run(prog,ctx)(0)
   }
-
 
   def repl():scala.Unit = {
     var ok = true
