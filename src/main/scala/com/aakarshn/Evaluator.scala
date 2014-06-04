@@ -12,6 +12,7 @@ object Evaluator  {
 
   val parser = new LambdaParserCtx()
   val repl_promt = "[STL] $ "
+  val debug = true;
 
   def is_value(t:Term) : Boolean = {
     t match {
@@ -58,16 +59,15 @@ object Evaluator  {
       case  IsZero(Succ(t:Term)) => False()
       case  IsZero(Pred(t:Term)) => False()
       case  IsZero(t1) => IsZero(eval1(t1,ctx))
-      //Lambda Calculus
       case  Let(name:String,v2:Term,body:Term) if is_value(v2) => {
         body.substitute(v2)
       }
       case  Let(name:String,t2:Term,body:Term) => {
         Let(name,eval1(t2,ctx),body)
       }
-        //
+      //Lambda Calculus
       case App(Abs(name:String,body:Term),v2) if is_value(v2) => {
-        //println("Substituting value in abstraction "+x);
+
         body.substitute(v2)
       }
 
@@ -97,14 +97,17 @@ object Evaluator  {
     }
   }
 
+  def processString(s:String):scala.Unit = processString(s,emptycontext)
+
+
   def processString(s :String , ctx: Context) = {
     val cmds:List[CtxCmd] = parser.parseReader(s);
     processCommandList(cmds,ctx)
   }
 
-  def processFile(in_file:String) :scala.Unit = {
+  def processFile(in_file:String) :scala.Unit = 
     processFile(in_file,emptycontext)
-  }
+
 
   def processFile(in_file:String,ctx:Context):scala.Unit ={
     val reader  = new FileReader(in_file);
@@ -138,8 +141,9 @@ object Evaluator  {
         return ctx
       }
       case Bind(x,b) => {
+
         val binding = evalBinding(b,ctx)
-        println("Adding x:"+binding+"to ctx" +ctx)
+        if (debug) println("Adding x:"+binding+"to ctx" +ctx)
         return addBinding(ctx,x,binding)
       }
     }

@@ -18,6 +18,12 @@ class ParserCtxSpec extends UnitSpec {
 
   val parser = new LambdaParserCtx()
 
+  "Parser" should "parse slash" in {
+    val term = parser.parseReader("x \\;")
+    println(term);
+  }
+
+  /*
   "Term parser" should "parse lambda " in {
     val term = parser.fromStringTerm("lambda x. x")(emptycontext)
     println(term);
@@ -30,6 +36,8 @@ class ParserCtxSpec extends UnitSpec {
       term
     }
   }
+
+  */
   /*
   it should "parse nested lambda" in { 
     assertResult((List(Eval(Abs("y",Abs("x",App(Var(0,2),Var(1,2)))))),List(("x",NameBinding()), ("y",NameBinding()))),""){

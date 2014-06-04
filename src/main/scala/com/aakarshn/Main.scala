@@ -14,8 +14,14 @@ object Main {
   def main(args:Array[String]): scala.Unit= {
     if(args(0) == "-i"){
       Evaluator.repl()
+      return
     }
     
+    if(args(0) == "-s"){
+      if(args.length < 2)
+      Evaluator.processString(args(1))
+      return;
+    }
     if(args.length < 1) {
       println("Usage: stl <input-file>")
       return;

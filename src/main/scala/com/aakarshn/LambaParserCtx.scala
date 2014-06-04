@@ -30,24 +30,28 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
   import Syntax._
 
-  def cmds:Parser[List[CtxCmd]] =   rep(cmd<~SEMICOLON.*)
+  def cmds:Parser[List[CtxCmd]] = rep(cmd<~SEMICOLON.*)
 
   def cmd:Parser[CtxCmd]=  
-     ( term^^{ 
+    ( (ident~binder)^^{
+         case (s~ctxBind) => 
+           ctx:Context =>
+           val b = ctxBind(ctx)
+           (Bind(s,b), addName(ctx,s))
+     }
+     | term^^{ 
          case ctxTrm => ctx:Context =>
          val (t,rctx) = ctxTrm(ctx)
-         (Eval(t),rctx)
-     }
-     | ident~binder^^{
-         case (s~ctxBind) => ctx:Context =>
-             val b = ctxBind(ctx)
-             (Bind(s,b), addName(ctx,s))
-      })
+         (Eval(t),rctx)}
+     )
 
-  /// what is TmAbbABind supposed to do
+  /// What is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
-     (SLASH^^{
-      case (_) => {(ctx:Context) => NameBinding() }}
+     (SLASH ^^ {
+       case (_) =>{(ctx:Context) =>
+        if (debug) println("matched slash for name binding ")
+        NameBinding()
+       }}
     | EQ~term^^{
       case (_~t) =>{(ctx:Context) => 
         val (rt,rctx) = t(ctx)

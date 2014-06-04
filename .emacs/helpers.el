@@ -6,6 +6,9 @@
 (defvar combinator-dir "~/src/pub/scala-parser-combinators/")
 (defvar scala-files-regexp "*.scala")
 
+(defvar an/scala-class-find-regexp
+  "\\(\\(trait\\)\\|\\(class\\)\\)\s+\\([a-zA-Z0-9]+\\)")
+
 (defun  an/scala-class-regexp(cls)
    (format  "\\(\\(trait\\)\\|\\(class\\)\\)\s*%s" cls))
 
@@ -124,7 +127,23 @@
 (defun an/ensime-sbt-do-i() 
   (interactive)
   (ensime-sbt-switch)
-  (ensime-sbt-switch "run -i"))
+  (ensime-sbt-action "run -i"))
+
+(defun an/scala-guess-class()
+  (interactive)                  
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward an/scala-class-find-regexp)
+    (match-string-no-properties 4)))
+    
+
+(defun an/ensime-test-only-class() 
+  (interactive)
+  (ensime-sbt-switch)  
+  (ensime-sbt-action
+   (format "test-only com.aakarshn.%s" (an/scala-guess-class))))
+
+
 
 (add-hook 'ensime-mode-hook
   (lambda()
