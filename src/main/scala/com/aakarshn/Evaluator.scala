@@ -189,46 +189,31 @@ object Evaluator  {
   }
 
   def repl():scala.Unit = {
-    var ok = true;
+    val ok = true
     while(ok) {
       print(repl_promt)
-
       val line = readLine();
-      if (line.startsWith(":")) {
+      try{
         line match {
           case ":q" =>  ok = false;
+          case ":l" =>  {
+            val fname  = line.split(" ")(1)
+            Evaluator.processFile(fname,emptycontext)
+          }
+          case _  => {
+            processString(line,emptycontext)
+
+          }
         }
       }
-      if(ok){
-        try{
-          processString(line,emptycontext)
-          println
-        }
-        catch {           
-          case ex:Exception  => ex.printStackTrace()
-          case ex:NoRulesApply  => ex.printStackTrace()
-        }
+      catch {
+        case ex:Exception  => ex.printStackTrace()
+        case ex:NoRulesApply  => ex.printStackTrace()
       }
     }
   }
 
-  /*
-  def runFile(in_file:String): scala.Unit ={
-    runFile(in_file,emptycontext)
-  }
 
-
-  def runFile(in_file:String,ctx:Context): scala.Unit ={
-    val reader  = new FileReader(in_file);
-
-    val results =run(reader,ctx);
-    results.map(pr => {
-      val rs = eval(pr,ctx)
-      print_result(rs);
-      println("");
-    })
-  }
-   */
 
   def print_results(terms:List[Term]):scala.Unit = terms.map({ term =>
     print_result(term) ;

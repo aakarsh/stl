@@ -21,6 +21,6 @@ object Main {
       return;
     }
 
-    //Evaluator.runFile(args(0))
+    Evaluator.runFile(args(0))
   }
 }
