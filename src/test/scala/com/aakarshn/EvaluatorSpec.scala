@@ -21,12 +21,12 @@ class EvaluatorSpec extends UnitSpec {
 
   "Eval" should "work" in {
       // Evaluator tests
-      assert(True() == eval(If(True(),True(),False())), "If did not evaluate true correctly")
-      assert(False() == eval(If(False(),True(),False())), "If did not evaluate false correctly")
-      assert(Succ(Zero()) == eval(Succ(Zero())), "succ evaluated incorrectly")
-      assert(Succ(Zero()) == eval(Succ(If(False(),Succ(Zero()),Zero()))), "succ evaluated incorrectly")
-      assert(True() == eval(IsZero(Zero())), "iszero is not evaluting correctly")
-      assert(False() == eval(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
+      assert(True() == eval_empty(If(True(),True(),False())), "If did not bevaluate true correctly")
+      assert(False() == eval_empty(If(False(),True(),False())), "If did not evaluate false correctly")
+      assert(Succ(Zero()) == eval_empty(Succ(Zero())), "succ evaluated incorrectly")
+      assert(Succ(Zero()) == eval_empty(Succ(If(False(),Succ(Zero()),Zero()))), "succ evaluated incorrectly")
+      assert(True() == eval_empty(IsZero(Zero())), "iszero is not evaluting correctly")
+      assert(False() == eval_empty(IsZero(Succ(Zero()))), "iszero is not evaluting correctly")
   }
 
   "Shifting" should "work" in {
@@ -36,30 +36,31 @@ class EvaluatorSpec extends UnitSpec {
 
   "Identity Eval" should "work" in {
        val id_term = Abs("x",Var(0,0))
-      assert(True() == eval(App(id_term,True())),"identiy eval is failing")
-      assert(False() == eval(App(id_term,False())),"identiy eval is failing")
-      assert(Succ(Zero()) == eval(App(id_term,Succ(Zero()))),"identity evaluation is failing")
+      assert(True() == eval_empty(App(id_term,True())),"identiy eval is failing")
+      assert(False() == eval_empty(App(id_term,False())),"identiy eval is failing")
+      assert(Succ(Zero()) == eval_empty(App(id_term,Succ(Zero()))),"identity evaluation is failing")
   }
 
   "Runner" should "should parse and evaluate simple lambda calculus expressions" in {
-    val v = Evaluator.run("(lambda x. x) true")
+    val v = Evaluator.run_empty("(lambda x. x) true")
     assert(True() == v(0),"Running identity returns identity got:"+v )
 
-    Evaluator.run("(lambda x. x x)")
-    Evaluator.run("(lambda x. x x) (lambda x. x) (lambda x. x)")
+    Evaluator.run_empty("(lambda x. x x)")
+    Evaluator.run_empty("(lambda x. x x) (lambda x. x) (lambda x. x)")
 
-    val pair = Evaluator.run("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
+    val pair = Evaluator.run_empty("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
 //    val hd  = Evaluator.run("(lambda p. p (lambda  )")
 //    println(pair)
   }
 
-
+  /*
   it should "run simple simple-arithmetic.f file without any errores" in {
     //TODO use relative path
     val dir = "/home/aakarsh/src/scala/stl/src/main/resources/test-files/"
     val filename = dir+"simple-arithmetic.f"
     Evaluator.runFile(filename);
   }
+   */
 
   
 }

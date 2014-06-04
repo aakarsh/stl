@@ -71,50 +71,57 @@ class ParserCtxSpec extends UnitSpec {
 
 
   }
-  /*
+
   it should "parse if" in {
-    val v = parser.fromStringTerm("if true then 0 else 0")
+    val v = parser.fromStringTerm("if true then 0 else 0")(emptycontext)._1
     assert(v == If(True(),Zero(),Zero()),"failing in parsing got "+v)
   }
 
   it should "parse succ" in {
-    val v = parser.fromStringTerm("succ succ 0")
+    val v = parser.fromStringTerm("succ succ 0")(emptycontext)._1
     assert(v == Succ(Succ(Zero())),"failing in parsing got "+v)
-    val k = parser.fromStringTerm("succ pred 0")
+    val k = parser.fromStringTerm("succ pred 0")(emptycontext)._1
     assert(k == Succ(Pred(Zero())),"failing in parsing got "+k)
   }
 
+
   it should "parse simple" in {
-    assert(Zero() == parser.fromStringTerm("0"),"Failed parsing value 0")
-    assert(True() == parser.fromStringTerm("true"),"Failed parsing value true")
-    assert(False() == parser.fromStringTerm("false"),"Failed parsing value false")
+    assert(Zero() == parser.fromStringTerm("0")(emptycontext)._1,"Failed parsing value 0")
+    assert(True() == parser.fromStringTerm("true")(emptycontext)._1,"Failed parsing value true")
+    assert(False() == parser.fromStringTerm("false")(emptycontext)._1,"Failed parsing value false")
   }  
 
 
   "Parser" should "parse simple arithmetic expressions" in {
-      assert(Succ(Pred(Zero())) == parse1("succ(pred(0))"),"()  evaluation not working")
-      assert(Succ(Zero()) == parse1("succ 0"), "parsing atomic true not working")
+      assert(Succ(Pred(Zero())) == parse1("succ(pred(0))",emptycontext),"()  evaluation not working")
+      assert(Succ(Zero()) == parse1("succ 0",emptycontext), "parsing atomic true not working")
   }
+
 
   it should "parse simple boolean" in {
-    assert(True() == parse1("true"), "parsing atomic true not working")
+    assert(True() == parse1("true",emptycontext), "parsing atomic true not working")
   }
+
 
   "Runner" should "parse and run simple arihmetic" in{
-      assert(Zero() == run1("succ pred 0"), "succ not working with pred")
-      assert(Zero() == run1("pred succ 0"), "pred not working with succ")
+      assert(Zero() == run1("succ pred 0",emptycontext), "succ not working with pred")
+      assert(Zero() == run1("pred succ 0",emptycontext), "pred not working with succ")
   }
 
+
   it should "parse and run simple boolean" in{
-      assert(List(True(),False()) == Evaluator.run("true;false\n"),"multi expression parsing not working")
-      assert(Zero() == run1("if true then 0 else succ 0"), "if-true evaluation not working")
-      assert(Succ(Zero()) == run1("if false then 0 else succ 0"),"if-false  evaluation not working")
+    //Values reversed????
+      assert(List(True(),False()) == Evaluator.run("true;false\n",emptycontext),"multi expression parsing not working")
+      assert(Zero() == run1("if true then 0 else succ 0",emptycontext), "if-true evaluation not working")
+      assert(Succ(Zero()) == run1("if false then 0 else succ 0",emptycontext),"if-false  evaluation not working")
   }
+
 
   "Parser" should "work" in {
     assert(List(Abs("x",Abs("y",Var(1,2)))) == new LambdaParser().fromString("(lambda x. lambda y. x)"),"parsing abstraction failing")
   }
 
+  /*
   "Parser" should "now trying lexer dependent parser" in {
     val parser = new LambdaParser();
     assertResult(Some(NumberTerm(10.0)),"got number parsed"){ parser.parseRaw("10") } 
@@ -165,13 +172,13 @@ class ParserCtxSpec extends UnitSpec {
       parser.fromString("true;")
     }
   }
-
+   */
   it should "parse let statement" in {
-    assertResult(List(Let("x",True(),Var(0,1))),"") {
-      parser.fromString("let x=true in x");
+    assertResult(Let("x",True(),Var(0,1)),"") {
+      parser.fromString("let x=true in x",emptycontext)(0)(emptycontext)._1
     }
   }
-   */
+
 
   /**
 // BREAKING TEST

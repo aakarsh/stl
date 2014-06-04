@@ -79,6 +79,9 @@ object Evaluator  {
   //   eval(term,emptycontext)
   // }
 
+  def eval_empty(term:Term):Term = {
+    eval(term,emptycontext)
+  }
   def eval(term:Term,ctx:Context):Term = {
     try {
       val t = eval1(term,ctx)
@@ -110,6 +113,9 @@ object Evaluator  {
 
   def parse1(s:String,ctx:Context):Term =  parse(s,ctx)(0)
 
+  def run_empty(prog: String) = {
+    run(prog,emptycontext)
+  }
   def run(prog: String,ctx:Context) = {
     val t = parse(prog,ctx)
     t.map(eval(_,ctx))
@@ -148,6 +154,7 @@ object Evaluator  {
   def runFile(in_file:String): scala.Unit ={
     runFile(in_file,emptycontext)
   }
+
 
   def runFile(in_file:String,ctx:Context): scala.Unit ={
     val reader  = new FileReader(in_file);

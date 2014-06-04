@@ -73,33 +73,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
         (TmAbbBind(rt))
       }})
 
-  def term_top:Parser[CtxTerm] = term /** ^^ {
-
-    //ctx:Context=> 
-    t:Term => {
-    def walk(p:Term,ctx:List[String]): Term = {
-      p match {
-        case UnresolveVar(x) => {
-          val index = ctx.indexOf(x)
-          if(index >= 0)
-            Var(index,ctx.length)
-          else
-            throw new RuntimeException("Unable to variable binder for :"+x+"\n In Context "+ ctx)
-        }
-        case App(t1:Term,t2:Term) => App(walk(t1,ctx),walk(t2,ctx))
-        case Abs(name:String,body:Term) => Abs(name,walk(body,name::ctx))
-        case Let(name:String,t2:Term,body:Term) => Let(name,walk(t2,name::ctx),walk(body,name::ctx)) 
-        case t => t
-      }
-    }
-    //hmmm
-
-    {ctx:Context =>
-      (walk(t,List[String]()))
-    }}
-  } 
-*/
-
   def term:(Parser[CtxTerm]) = (
         app_term
       | number
