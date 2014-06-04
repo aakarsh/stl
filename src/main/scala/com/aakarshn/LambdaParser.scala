@@ -38,12 +38,12 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
            ctx:Context =>
            val b = ctxBind(ctx)
            (Bind(s,b), addName(ctx,s))
-     }
+    }
      | term^^{ 
          case ctxTrm => ctx:Context =>
          val (t,rctx) = ctxTrm(ctx)
-         (Eval(t),rctx)}
-     )
+         (Eval(t),rctx)
+     })
 
   /// What is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
@@ -188,28 +188,24 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   def parseTerms(s:String) :List[Term] = parse(s,emptycontext)
 
+
   def parse(s:String,ctx:Context):List[Term] =  {
 
-    val lst = parseExpression(s,ctx)
-
-    def r(cmd:CtxTerm,ctx:Context,acc:List[Term]) ={
-      val (rcmd,rctx)= cmd(ctx)
-      (rcmd::acc,rctx)
-    }
-
+    val lst:List[CtxTerm] = parseExpression(s,ctx)
     var rctx:Context = ctx;
     var rtms:List[Term] = List[Term]();
 
     for(c <- lst) {
-      val k = r(c,rctx,rtms);
-      rtms = k._1
-      println("rtms "+rtms);
+      val k = c(rctx)
       rctx = k._2
+      rtms = k._1::rtms
     }
-    rtms
-  }
 
-  def fromStringTerm(s:String):CtxTerm = withParser(term,s)  
+    rtms.reverse
+  }
+  
+
+  def fromStringTerm(s:String):CtxTerm = withParser(term,s)
 
   def SEMICOLON = accept(SpecialChar(';'))
   def SLASH = accept(SpecialChar('\\'))

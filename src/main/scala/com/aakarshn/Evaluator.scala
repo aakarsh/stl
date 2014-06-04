@@ -95,11 +95,8 @@ object Evaluator  {
     }
   }
 
-
-
   def processString(s:String):scala.Unit = 
     processString(s,emptycontext)
-
 
   def processString(s :String , ctx: Context) = {
     val cmds:List[CtxCmd] = parser.parseCommands(s);
@@ -108,21 +105,15 @@ object Evaluator  {
 
   def processFile(in_file:String):Context =   processFile(in_file,emptycontext)
 
-
   def processFile(in_file:String,ctx:Context):Context ={
     val reader  = new FileReader(in_file);
     val lst:List[CtxCmd] = parser.parseCommands(reader);
     processCommandList(lst,ctx)
   }
 
-  def processCommandList(lst:List[CtxCmd],ctx:Context) :Context = { 
-    def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
-      val (rcmd,rctx)= cmd(ctx)
-      (rcmd::acc,rctx)
-    }
 
+  def processCommandList(lst:List[CtxCmd],ctx:Context) :Context = { 
     var rctx =  ctx
-    var rcmds = List[Command]();
 
     for(cmd <-lst) {
       val k = cmd(rctx)
