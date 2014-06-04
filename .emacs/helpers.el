@@ -121,8 +121,15 @@
   (ensime-sbt-switch)
   (ensime-sbt-action "test"))
 
+(defun an/ensime-sbt-do-i() 
+  (interactive)
+  (ensime-sbt-switch)
+  (ensime-sbt-switch "run -i"))
+
 (add-hook 'ensime-mode-hook
   (lambda()
     (message "Initialize custom hooks")    
     (define-key ensime-mode-map (kbd "C-c b t") 'ensime-sbt-do-compile)
-    (define-key ensime-mode-map (kbd "C-c C-b t") 'an/ensime-sbt-do-test)))
+    (define-key ensime-mode-map (kbd "C-c C-b t") 'an/ensime-sbt-do-test)
+    (define-key ensime-mode-map (kbd "C-c C-b i") 'an/ensime-sbt-do-i)
+))

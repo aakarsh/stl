@@ -232,6 +232,13 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
+  def parseReader(s: String) : List[CtxCmd] = {
+    phrase(cmds)(new Scanner(s)) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
+
   def fromString[T](p:Parser[T],s:String):T =
     phrase (p)(new Scanner(s)) match  {
       case Success(result,_) => result

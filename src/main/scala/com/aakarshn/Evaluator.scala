@@ -11,6 +11,7 @@ import Syntax._;
 object Evaluator  {
 
   val parser = new LambdaParserCtx()
+  val repl_promt = "[STL] $ "
 
   def is_value(t:Term) : Boolean = {
     t match {
@@ -92,10 +93,16 @@ object Evaluator  {
     }
   }
 
+  def processString(s :String , ctx: Context) = {
+    val lst:List[CtxCmd] = parser.parseReader(s);
+    processCommandList(lst,ctx)
+  }
   def processFile(in_file:String,ctx:Context) ={
     val reader  = new FileReader(in_file);
     val lst:List[CtxCmd] = parser.parseReader(reader);
-
+    processCommandList(lst,ctx)
+  }
+  def processCommandList(lst:List[CtxCmd],ctx:Context)  = { 
     def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
       val (rcmd,rctx)= cmd(ctx)
       (rcmd::acc,rctx)
@@ -136,7 +143,6 @@ object Evaluator  {
       case t => t
     }
   }
-
 
   def parse(s:String,ctx:Context):List[Term] =  {
 
@@ -185,16 +191,23 @@ object Evaluator  {
   def repl():scala.Unit = {
     var ok = true;
     while(ok) {
-      print("stl>")
+      print(repl_promt)
 
       val line = readLine();
-      if(line == ":q"){
-        ok = false
+      if (line.startsWith(":")) {
+        line match {
+          case ":q" =>  ok = false;
+        }
       }
       if(ok){
-        val res = run(line,emptycontext)
-        println(res)
-        print_results(run(line,emptycontext))
+        try{
+          processString(line,emptycontext)
+          println
+        }
+        catch {           
+          case ex:Exception  => ex.printStackTrace()
+          case ex:NoRulesApply  => ex.printStackTrace()
+        }
       }
     }
   }
