@@ -190,7 +190,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
 
   def parse(s:String,ctx:Context):List[Term] =  {
-
     val lst:List[CtxTerm] = parseExpression(s,ctx)
     var rctx:Context = ctx;
     var rtms:List[Term] = List[Term]();
@@ -200,15 +199,13 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       rctx = k._2
       rtms = k._1::rtms
     }
-
     rtms.reverse
-  }
-  
+  }  
 
   def fromStringTerm(s:String):CtxTerm = withParser(term,s)
 
   def SEMICOLON = accept(SpecialChar(';'))
-  def SLASH = accept(SpecialChar('\\'))
+  def SLASH = accept(SpecialChar('/'))
   def EQ = accept(SpecialChar('='))
 
 }

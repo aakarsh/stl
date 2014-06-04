@@ -33,7 +33,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | '=' ^^^ SpecialChar('=')
       | delim
       | '\"' ~> failure("Unterminated string")
-      | '\\' ^^^ SpecialChar('\\')
+      | '/' ^^^ SpecialChar('/')
       | rep(letter) ^^ checkKeyword
       | failure("Illegal character"))
 

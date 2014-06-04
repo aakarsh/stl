@@ -26,9 +26,9 @@ class LexSpec extends UnitSpec {
   }
 
   it should "get backslash" in {
-    val scanner = new Scanner("\\")
+    val scanner = new Scanner("/")
     val f = scanner.first
-    assertResult(SpecialChar('\\'),f){f}
+    assertResult(SpecialChar('/'),f){f}
   }
 
 
