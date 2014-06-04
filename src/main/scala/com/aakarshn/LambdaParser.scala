@@ -116,6 +116,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
        (IsZero(rterm),rctx)
     }}
 
+
   def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => 
     val (rterm,rctx) = e(ctx)
     (Succ(rterm),rctx) 
@@ -162,11 +163,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   /**
    *  Begin parsing interaface here.
    */ 
-
-
-  /**
-    * Used to process multiple semi-colon seperated commands
-    */
   def parseCommands(s:String) : List[CtxCmd] = withParser(cmds,s)
   def parseCommands(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
 
