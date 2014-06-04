@@ -22,7 +22,6 @@ class ParserCtxSpec extends UnitSpec {
     println(term);
   }
 
-  //TODO fix parse commands
   it should "return eval" in {
     assertResult((Abs("x",Var(0,1)),List(("x",NameBinding()))),""){
       val term = parser.fromStringTerm("lambda x. x")(emptycontext)
@@ -57,21 +56,22 @@ class ParserCtxSpec extends UnitSpec {
    }
 
 
-  /*
+
   it should "application parsing" in {
     val v =parser.fromStringTerm("x x x")
     println("Application parsing "+v)
   }
 
+
   it should "generate nameless representation " in {
-    val v = parser.fromString("lambda x. lambda y. lambda z. x y z")
-    assert(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0),"hmm")
-    assert(Abs("x",App(Var(0,1),Var(0,1))) == parser.fromString("lambda x. x x")(0),"paring simple application")
-    assert(App(Abs("x",Var(0,1)),True()) == parser.fromString("(lambda x. x) true")(0),"paring simple application")
+    val v = parser.fromString("lambda x. lambda y. lambda z. x y z",emptycontext)
+    assert(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0)(emptycontext)._1,"hmm")
+    assert(Abs("x",App(Var(0,1),Var(0,1))) == parser.fromString("lambda x. x x",emptycontext)(0)(emptycontext)._1,"paring simple application")
+    assert(App(Abs("x",Var(0,1)),True()) == parser.fromString("(lambda x. x) true",emptycontext)(0)(emptycontext)._1,"paring simple application")
 
 
   }
-
+  /*
   it should "parse if" in {
     val v = parser.fromStringTerm("if true then 0 else 0")
     assert(v == If(True(),Zero(),Zero()),"failing in parsing got "+v)
