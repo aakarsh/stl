@@ -93,8 +93,30 @@ object Evaluator  {
    terms.map(tc => eval(tc(ctx),ctx));
   }
    */
+//[error]  found   : List[com.aakarshn.Syntax.Context => (com.aakarshn.Syntax.Term, com.aakarshn.Syntax.Context)]
+  def parse(s:String,ctx:Context):List[Term] =  {
+    val lst = new LambdaParserCtx().fromString(s,ctx)
 
-  def parse(s:String,ctx:Context):List[Term] =  new LambdaParserCtx().fromString(s,ctx).map(_(ctx))
+    def r(cmd:CtxTerm,ctx:Context,acc:List[Term]) ={
+      val (rcmd,rctx)= cmd(ctx)
+      (rcmd::acc,rctx)
+    }
+
+    var rctx = ctx;
+    var rtms = List[Term]();
+
+    for(c <- lst) {
+      val k = r(c,rctx,rtms);
+      rtms = k._1
+      rctx = k._2
+    }
+    rtms
+  }
+  /*
+.map(
+      CtxTerm =>
+      _(ctx))
+   */
 
   def parse1(s:String,ctx:Context):Term =  parse(s,ctx)(0)
 

@@ -9,7 +9,7 @@ object Syntax {
   abstract class EvalException extends Throwable
 
   case class NoRulesApply(s:String) extends  EvalException
-  type CtxTerm = Context => Term
+  type CtxTerm = Context => (Term,Context)
   type CtxBind= Context => Binding
 
   type CtxCmd = Context=>(Command,Context)

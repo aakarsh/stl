@@ -20,10 +20,17 @@ class ParserCtxSpec extends UnitSpec {
   "Term parser" should "parse lambda " in {
     val evalit = parser.fromStringTerm("lambda x. x",emptycontext)
 
-    val it = evalit(emptycontext) // Contexted term
-    println(it);
+    val term = evalit(emptycontext) // Contexted term
+    println(term);
 //    assert(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
   }
+
+  it should "Return Eval" in {
+    val v = parser.f2("lambda x. x",emptycontext)
+    val term = v(emptycontext)
+    println(term)
+  }
+
   /*
   it should "parse simple nested lambda " in {
     val v = parser.fromStringTerm("lambda x. lambda z. x")

@@ -18,6 +18,8 @@ import scala.io.Source
 import java.io._
 import Syntax._;
 
+// Final Report : End  of next week
+
 class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   type Tokens = LambdaLexer
@@ -34,10 +36,11 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
         def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
           val (rcmd,rctx)= cmd(ctx)
           (rcmd::acc,rctx)
-         }
+        }
 
         var rctx = ctx;
         var rcmds = List[Command]();
+
         for(c <-lst) {
           val k = r(c,rctx,rcmds)
           rcmds = k._1
@@ -47,20 +50,17 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   }
 
 
-
-
   def cmd:Parser[CtxCmd]=  (
         term^^{ case ctxTrm =>
                     ctx:Context =>
-                        val t = ctxTrm(ctx)
-                        (Eval(t),ctx)
+                        val (t,rctx) = ctxTrm(ctx)
+                        (Eval(t),rctx)
         }
       | ident~binder^^{ case (s~ctxBind) =>
                              ctx:Context =>
                                   val b = ctxBind(ctx)
                                   (Bind(s,b), addName(ctx,s))
-      })
-  
+      })  
 
 
   def semi = accept(SpecialChar(';'))
@@ -70,7 +70,10 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     (SpecialChar('\\')^^{
       case (_) => {(ctx:Context) => NameBinding() }}
     |SpecialChar('=')~term^^{
-      case (_~t) =>{(ctx:Context) => TmAbbBind(t(ctx))}})
+      case (_~t) =>{(ctx:Context) => 
+        val (rt,rctx) = t(ctx)
+        (TmAbbBind(rt))
+      }})
 
   def term_top:Parser[CtxTerm] = term /** ^^ {
 
@@ -100,9 +103,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   }      */
 
-
   def term:(Parser[CtxTerm]) = (
-        app_term
+      app_term
       | number
       | var_term
       | string
@@ -114,64 +116,87 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       | iszero
       | lambda_term
       | let_term
-      | "("~>term<~")" )
+      | "("~>term<~")"
+  )
 
-  def let_term = Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
+  def let_term:Parser[CtxTerm] = Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
     case(_~e1~_~e2~_~e3) =>
       {
         ctx:Context =>
-        Let(e1,e2(ctx),e3(ctx))
+        val (r2,rctx) = e2(ctx)
+        val (r3,_) = e3(rctx)
+        (Let(e1,r2,r2),rctx)
       }
   }
 
-  def if_term = Keyword("if")~term~Keyword("then")~term~Keyword("else")~term ^^ {
+  def if_term:Parser[CtxTerm] = Keyword("if")~term~Keyword("then")~term~Keyword("else")~term ^^ {
       case (_~e1~_~e2~_~e3)  => 
       {ctx:Context =>
-         If(e1(ctx),e2(ctx),e3(ctx))}
-  }
+         val (r1,_) = e1(ctx)
+         val (r2,_) = e2(ctx)
+         val (r3,_) = e3(ctx)
+         (If(r1,r2,r3),ctx)
+   }}
 
-  def lambda_term = Keyword("lambda")~>ident~"."~term^^ {
+  def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~"."~term^^ {
     case (s~_~t) => 
       {ctx:Context =>
-        val ctx1 = addName(ctx,s)
-        Abs(s,t(ctx1))}
-  }
+        val rctx = addName(ctx,s)
+        val (rtm,_) = t(rctx)
+        (Abs(s,rtm),rctx)
+   }}
 
-  def true_term =   Keyword("true")^^^ ({ctx:Context => True()})
-  def false_term = Keyword("false")^^^ ({ctx:Context => False()})
+  def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
+  def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})
   
-  def iszero =  Keyword("iszero")~term^^{ case (_~e) => {ctx:Context => IsZero(e(ctx))}  }
-  def succ =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => Succ(e(ctx)) } }
-  def pred =  Keyword("pred")~term^^{ case (_~e) => {ctx:Context => Pred(e(ctx)) } }
+  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~e) => 
+    { ctx:Context =>
+       val (rterm,rctx) = e(ctx)
+       (IsZero(rterm),rctx)
+    }}
+
+  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => 
+    val (rterm,rctx) = e(ctx)
+    (Succ(rterm),rctx) 
+   }}
+
+  def pred:Parser[CtxTerm] =  Keyword("pred")~term^^{ case (_~e) => {ctx:Context =>
+    val (rterm,rctx) = e(ctx)
+    (Pred(rterm),rctx)
+//    Pred(e(ctx)) 
+  }}
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
-  def app_term = ((
-    "("~>term<~")" 
-     | var_term 
-     | true_term 
-     | false_term)~ term ^^ { 
+  def app_term:Parser[CtxTerm] = (
+    ("("~>term<~")"| var_term | true_term | false_term )~term ^^ { 
     case (v1~t) => 
-      { ctx:Context => App(v1(ctx),t(ctx)) }
+      { ctx:Context => 
+             val r1tm = v1(ctx)
+             val (r2tm,_) = t(ctx)
+//             (App(v1,r2tm),ctx)
+//        App(v1(ctx),t(ctx)) 
+        (Unit(),ctx)
+      }
 })
 
-  def var_term = accept("string",{
+  def var_term:Parser[CtxTerm] = accept("string",{
     case Identifier(s) => 
       ctx:Context =>
-         Var(name2Index(ctx,s),ctx.length)
+        (Var(name2Index(ctx,s),ctx.length),ctx)
       //UnresolveVar(s)
   })
 
-  def string = accept("string",{
+  def string:Parser[CtxTerm] = accept("string",{
     case StringLit(s) => 
-      ctx:Context => StringTerm(s)
+      ctx:Context => (StringTerm(s),ctx)
   })
 
-  def number = accept("number",{
+  def number:Parser[CtxTerm] = accept("number",{
     case NumericLit(s) => 
       ctx:Context =>
           val n = s.toDouble
-          if (n <= 0) Zero()
-          else NumberTerm(n.toDouble)
+          if (n <= 0) (Zero(),ctx)
+          else (NumberTerm(n.toDouble),ctx)
   })
 
   def parseRaw(input:String, ctx:Context): Option[CtxTerm] =  phrase(term)(new Scanner(input)) match {
@@ -181,6 +206,13 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
   def fromString(s:String,ctx:Context) : List[CtxTerm] = {
     phrase(expr)(new Scanner(s)) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
+
+  def f2(s:String,ctx:Context) : CtxCmds = {
+    phrase(cmds)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
