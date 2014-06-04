@@ -5,6 +5,7 @@ import scala.util.parsing.combinator._
 import scala.io.Source
 import java.io._
 import Syntax._;
+
 /**
   A direct port of the evaluator for simply typed lambda calculus.    
   */
@@ -39,10 +40,10 @@ object Evaluator  {
     }
   }
 
-  def eval1(term:Term,ctx:Context): Term =  {
+  def evalTerm1(term:Term,ctx:Context): Term =  {
 
     def eval_numerical(t1:Term,ctx:Context) = {
-      val result = eval1(t1,ctx)
+      val result = evalTerm1(t1,ctx)
       require(is_numerical(result))
       result
     }
@@ -50,7 +51,7 @@ object Evaluator  {
     term match {
       case  If(True(),t2,t3) => t2
       case  If(False(),t2,t3) => t3
-      case  If(t1:Term,t2:Term,t3:Term)   => If(eval1(t1,ctx),t2,t3)
+      case  If(t1:Term,t2:Term,t3:Term)   => If(evalTerm1(t1,ctx),t2,t3)
       case  Succ(Pred(t1)) => t1
       case  Succ(t1)  =>  Succ(eval_numerical(t1,ctx))
       case  Pred(Succ(t1)) => t1
@@ -58,25 +59,22 @@ object Evaluator  {
       case  IsZero(Zero()) => True()
       case  IsZero(Succ(t:Term)) => False()
       case  IsZero(Pred(t:Term)) => False()
-      case  IsZero(t1) => IsZero(eval1(t1,ctx))
+      case  IsZero(t1) => IsZero(evalTerm1(t1,ctx))
       case  Let(name:String,v2:Term,body:Term) if is_value(v2) => {
         body.substitute(v2)
       }
       case  Let(name:String,t2:Term,body:Term) => {
-        Let(name,eval1(t2,ctx),body)
+        Let(name,evalTerm1(t2,ctx),body)
       }
       //Lambda Calculus
       case App(Abs(name:String,body:Term),v2) if is_value(v2) => {
-
         body.substitute(v2)
       }
-
       case App(v1:Term,t2:Term) if is_value(v1) =>{
-        App(v1,eval1(t2,ctx))
+        App(v1,evalTerm1(t2,ctx))
       }
-
       case App(t1:Term,t2:Term) => {
-        val r1 = eval1(t2,ctx)
+        val r1 = evalTerm1(t2,ctx)
         App(r1,t2)
       }
       case _ => throw NoRulesApply("Out of rules")
@@ -85,19 +83,22 @@ object Evaluator  {
 
 
   def eval_empty(term:Term):Term = {
-    eval(term,emptycontext)
+    evalTerm(term,emptycontext)
   }
 
-  def eval(term:Term,ctx:Context):Term = {
+  def evalTerm(term:Term,ctx:Context):Term = {
     try {
-      val t = eval1(term,ctx)
-      eval(t,ctx)
+      val t = evalTerm1(term,ctx)
+      evalTerm(t,ctx)
     } catch{
       case ex:NoRulesApply => term
     }
   }
 
-  def processString(s:String):scala.Unit = processString(s,emptycontext)
+
+
+  def processString(s:String):scala.Unit = 
+    processString(s,emptycontext)
 
 
   def processString(s :String , ctx: Context) = {
@@ -105,17 +106,17 @@ object Evaluator  {
     processCommandList(cmds,ctx)
   }
 
-  def processFile(in_file:String) :scala.Unit = 
+  def processFile(in_file:String) :Context = 
     processFile(in_file,emptycontext)
 
 
-  def processFile(in_file:String,ctx:Context):scala.Unit ={
+  def processFile(in_file:String,ctx:Context):Context ={
     val reader  = new FileReader(in_file);
     val lst:List[CtxCmd] = parser.parseReader(reader);
     processCommandList(lst,ctx)
   }
 
-  def processCommandList(lst:List[CtxCmd],ctx:Context) :scala.Unit = { 
+  def processCommandList(lst:List[CtxCmd],ctx:Context) :Context = { 
     def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
       val (rcmd,rctx)= cmd(ctx)
       (rcmd::acc,rctx)
@@ -130,18 +131,39 @@ object Evaluator  {
       rctx = k._2
       rctx  = processCommand(c,rctx)
     }
+    rctx
   }
 
+  /**
+    Returns context modified as a resutl of evaluating command
+  */
   def processCommand(cmd:Command,ctx:Context):Context =  {
     cmd match {
       case Eval(t)  => {
-        val t1 = eval(t,ctx)
+        val t1 = evalTerm(t,ctx)
         print_result(t1)
         println()
         return ctx
       }
       case Bind(x,b) => {
+        val binding = evalBinding(b,ctx)
+        if (debug) println("Adding x:"+binding+"to ctx" +ctx)
+        return addBinding(ctx,x,binding)
+      }
+    }
+  }
 
+
+  def processCommandInternal(cmd:Command,ctx:Context,th:TermHandler):Context =  {
+    cmd match {
+      case Eval(t)  => {
+        val t1 = evalTerm(t,ctx)
+        th(t1)
+//        print_result(t1)
+//        println()
+        return ctx
+      }
+      case Bind(x,b) => {
         val binding = evalBinding(b,ctx)
         if (debug) println("Adding x:"+binding+"to ctx" +ctx)
         return addBinding(ctx,x,binding)
@@ -152,32 +174,15 @@ object Evaluator  {
   def evalBinding(b:Binding,ctx:Context) ={
     b match {
       case TmAbbBind(t) =>
-        val t1 = eval(t,ctx)
+        val t1 = evalTerm(t,ctx)
         TmAbbBind(t1)
       case t => t
     }
   }
 
-  def parse(s:String,ctx:Context):List[Term] =  {
 
-    val lst = parser.fromString(s,ctx)
 
-    def r(cmd:CtxTerm,ctx:Context,acc:List[Term]) ={
-      val (rcmd,rctx)= cmd(ctx)
-      (rcmd::acc,rctx)
-    }
-
-    var rctx:Context = ctx;
-    var rtms:List[Term] = List[Term]();
-
-    for(c <- lst) {
-      val k = r(c,rctx,rtms);
-      rtms = k._1
-      rctx = k._2
-    }
-    rtms
-  }
-
+  /**
   def parse1(s:String,ctx:Context):Term =  parse(s,ctx)(0)
 
   def run_empty(prog: String) = {
@@ -186,12 +191,13 @@ object Evaluator  {
 
   def run(prog: String,ctx:Context) = {
     val t = parse(prog,ctx)
-    t.map(eval(_,ctx))
+    t.map(evalTerm(_,ctx))
   }
 
   def run1(prog: String,ctx:Context) = {
     run(prog,ctx)(0)
   }
+  */
 
   def repl():scala.Unit = {
     var ok = true

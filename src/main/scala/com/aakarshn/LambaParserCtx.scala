@@ -172,10 +172,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-  /**
-   *  Used to process single command
-   */
-  def parseCommand(s:String,ctx:Context) : CtxCmd = {
+  def parseCommand(s:String) : CtxCmd = {
     phrase(cmd)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
@@ -183,16 +180,12 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   }
 
 
-  def parseRaw(input:String, ctx:Context): Option[CtxTerm] =  phrase(term)(new Scanner(input)) match {
-    case Success(result,_) => Some(result)
-    case f: NoSuccess => scala.sys.error(f.msg)
-  }
-
-  def fromString(s:String,ctx:Context) : List[CtxTerm] = {
-    phrase(expr)(new Scanner(s)) match  {
+  def parseExpression(s:String,ctx:Context) : List[CtxTerm] = {
+    val lst = phrase(expr)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }
+    lst
   }
 
   def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = {
@@ -216,11 +209,36 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
+
   def fromString[T](p:Parser[T],s:String):T =
     phrase (p)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
    }
+
+  def parseFirstTerm(s:String) :Term = parse(s,emptycontext)(0)
+
+  def parseTerms(s:String) :List[Term] = parse(s,emptycontext)
+
+  def parse(s:String,ctx:Context):List[Term] =  {
+
+    val lst = parseExpression(s,ctx)
+
+    def r(cmd:CtxTerm,ctx:Context,acc:List[Term]) ={
+      val (rcmd,rctx)= cmd(ctx)
+      (rcmd::acc,rctx)
+    }
+
+    var rctx:Context = ctx;
+    var rtms:List[Term] = List[Term]();
+
+    for(c <- lst) {
+      val k = r(c,rctx,rtms);
+      rtms = k._1
+      rctx = k._2
+    }
+    rtms
+  }
 
   def fromStringTerm(s:String):CtxTerm = fromString[CtxTerm](term,s)  
 

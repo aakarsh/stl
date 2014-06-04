@@ -73,10 +73,10 @@ class ParserCtxSpec extends UnitSpec {
 
 
   it should "generate nameless representation " in {
-    val v = parser.fromString("lambda x. lambda y. lambda z. x y z",emptycontext)
+    val v = parser.parseExpression("lambda x. lambda y. lambda z. x y z",emptycontext)
     assert(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0)(emptycontext)._1,"hmm")
-    assert(Abs("x",App(Var(0,1),Var(0,1))) == parser.fromString("lambda x. x x",emptycontext)(0)(emptycontext)._1,"paring simple application")
-    assert(App(Abs("x",Var(0,1)),True()) == parser.fromString("(lambda x. x) true",emptycontext)(0)(emptycontext)._1,"paring simple application")
+    assert(Abs("x",App(Var(0,1),Var(0,1))) == parser.parseExpression("lambda x. x x",emptycontext)(0)(emptycontext)._1,"paring simple application")
+    assert(App(Abs("x",Var(0,1)),True()) == parser.parseExpression("(lambda x. x) true",emptycontext)(0)(emptycontext)._1,"paring simple application")
 
 
   }
@@ -102,35 +102,31 @@ class ParserCtxSpec extends UnitSpec {
 
 
   "Parser" should "parse simple arithmetic expressions" in {
-      assert(Succ(Pred(Zero())) == parse1("succ(pred(0))",emptycontext),"()  evaluation not working")
-      assert(Succ(Zero()) == parse1("succ 0",emptycontext), "parsing atomic true not working")
-  }
+      assertResult(Succ(Pred(Zero())),"()  evaluation not working"){
+         parser.parse("succ(pred(0))",emptycontext)(0)
+      }
 
+      assertResult(Succ(Zero()), "parsing atomic true not working"){
+        parser.parse("succ 0",emptycontext)(0)
+
+      }
+  }
 
   it should "parse simple boolean" in {
-    assert(True() == parse1("true",emptycontext), "parsing atomic true not working")
-  }
-
-
-  "Runner" should "parse and run simple arihmetic" in{
-      assert(Zero() == run1("succ pred 0",emptycontext), "succ not working with pred")
-      assert(Zero() == run1("pred succ 0",emptycontext), "pred not working with succ")
-  }
-
-
-  it should "parse and run simple boolean" in{
-    //Values reversed????
-      assert(List(True(),False()) == Evaluator.run("true;false\n",emptycontext),"multi expression parsing not working")
-      assert(Zero() == run1("if true then 0 else succ 0",emptycontext), "if-true evaluation not working")
-      assert(Succ(Zero()) == run1("if false then 0 else succ 0",emptycontext),"if-false  evaluation not working")
+    assertResult(True(), "parsing atomic true not working"){
+      parser.parse("true",emptycontext)(0)
+    }
   }
 
 
   "Parser" should "work" in {
-    assert(List(Abs("x",Abs("y",Var(1,2)))) == new LambdaParser().fromString("(lambda x. lambda y. x)"),"parsing abstraction failing")
+    assertResult(List(Abs("x",Abs("y",Var(1,2)))),"parsing abstraction failing"){
+      parser.parse("(lambda x. lambda y. x)",emptycontext)
+    }
   }
 
   /*
+
   "Parser" should "now trying lexer dependent parser" in {
     val parser = new LambdaParser();
     assertResult(Some(NumberTerm(10.0)),"got number parsed"){ parser.parseRaw("10") } 
@@ -182,9 +178,10 @@ class ParserCtxSpec extends UnitSpec {
     }
   }
    */
+
   it should "parse let statement" in {
     assertResult(Let("x",True(),Var(0,1)),"") {
-      parser.fromString("let x=true in x",emptycontext)(0)(emptycontext)._1
+      parser.parseExpression("let x=true in x",emptycontext)(0)(emptycontext)._1
     }
   }
 

@@ -41,25 +41,24 @@ class EvaluatorSpec extends UnitSpec {
       assert(Succ(Zero()) == eval_empty(App(id_term,Succ(Zero()))),"identity evaluation is failing")
   }
 
-  "Runner" should "should parse and evaluate simple lambda calculus expressions" in {
-    val v = Evaluator.run_empty("(lambda x. x) true")
-    assert(True() == v(0),"Running identity returns identity got:"+v )
+  "Runner" should "parse and evaluate simple lambda calculus expressions" in {
+    // basically we want to be able to look at the resultign term after evaluatign a term
+    Evaluator.processString("(lambda x. x x)")
+    Evaluator.processString("(lambda x. x x) (lambda x. x) (lambda x. x)")
+    val pair = Evaluator.processString("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
 
-    Evaluator.run_empty("(lambda x. x x)")
-    Evaluator.run_empty("(lambda x. x x) (lambda x. x) (lambda x. x)")
-
-    val pair = Evaluator.run_empty("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
 //    val hd  = Evaluator.run("(lambda p. p (lambda  )")
 //    println(pair)
+
   }
 
 
   it should "run simple simple-arithmetic.f file without any errores" in {
-    //TODO use relative path
     val dir = "/home/aakarsh/src/scala/stl/src/main/resources/test-files/"
     val filename = dir+"simple-arithmetic.f"
     Evaluator.processFile(filename,emptycontext);
   }
+
   
 }
 

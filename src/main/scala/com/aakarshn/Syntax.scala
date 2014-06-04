@@ -19,7 +19,10 @@ object Syntax {
   case class Eval(term:Term) extends Command
   case class Bind(variable:String,b:Binding) extends Command
 
+  type TermHandler = Term => Any
 
+  def decontext(ctxcmd:CtxCmd) = ctxcmd(emptycontext)
+  def decontext(ctxcmd:CtxCmd,ctx:Context) = ctxcmd(ctx)
 
   abstract class Binding;
   case class NameBinding extends Binding;
@@ -32,6 +35,8 @@ object Syntax {
   // TODO think about makeing it a class??
   type Context = List[(String,Binding)];
   val emptycontext:Context = List[(String,Binding)]();
+
+
 
   def addBinding(ctx:Context,x:String,bnd:Binding):Context = (x,bnd)::ctx
   def addName(ctx:Context,x:String)= addBinding(ctx,x,NameBinding())
