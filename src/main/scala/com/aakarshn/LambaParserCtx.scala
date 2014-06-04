@@ -25,10 +25,12 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   type Tokens = LambdaLexer
   val lexical  = new Tokens
 
+  val debug = true
+
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
   import Syntax._
 
-  def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 
+
 
   def cmds:Parser[CtxCmds] =   rep(cmd<~SEMICOLON.*) ^^  {  
         lst:List[CtxCmd] =>  
@@ -45,6 +47,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
           rcmds = k._1
           rctx  = k._2
         }
+
        (rcmds,rctx)
   }
 
@@ -61,6 +64,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       })
 
 
+
+
   /// what is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
      (SLASH^^{
@@ -70,6 +75,9 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
         val (rt,rctx) = t(ctx)
         (TmAbbBind(rt))
       }})
+
+
+  def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 
 
   def term:(Parser[CtxTerm]) = (
         app_term
@@ -112,8 +120,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
       {ctx:Context =>
         val rctx = addName(ctx,s)
         val (rtm,rctx2) = t(rctx)
-        println("adding name "+s);
-        println("adding ctx "+ rctx2);
+        if (debug) println("adding name "+s);
+        if (debug) println("adding ctx "+ rctx2);
         (Abs(s,rtm),rctx2)
    }}
 
@@ -156,9 +164,8 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     case Identifier(s) => 
       ctx:Context =>
       val indx = name2Index(ctx,s)
-      println("Saw Var :"+s+" Ctx"+ctx+"index "+indx)
+        if(debug) println("Saw Var :"+s+" Ctx"+ctx+"index "+indx)
         (Var(indx,ctx.length),ctx)
-      //UnresolveVar(s)
   })
 
   def string:Parser[CtxTerm] = accept("string",{
@@ -174,6 +181,31 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
           else (NumberTerm(n.toDouble),ctx)
   })
 
+  /**
+   *  Begin parsing interaface here.
+   */ 
+
+  /**
+    * Used to process multiple semi-colon seperated commands
+    */
+  def parseCommands(s:String,ctx:Context) : CtxCmds = {
+    phrase(cmds)(new Scanner(s)) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
+
+  /**
+   *  Used to process single command
+   */
+  def parseCommand(s:String,ctx:Context) : CtxCmd = {
+    phrase(cmd)(new Scanner(s)) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
+
+
   def parseRaw(input:String, ctx:Context): Option[CtxTerm] =  phrase(term)(new Scanner(input)) match {
     case Success(result,_) => Some(result)
     case f: NoSuccess => scala.sys.error(f.msg)
@@ -186,12 +218,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-  def parseCommands(s:String,ctx:Context) : CtxCmds = {
-    phrase(cmds)(new Scanner(s)) match  {
-      case Success(result,_) => result
-      case f: NoSuccess => scala.sys.error(f.msg)
-    }
-  }
 
   def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = {
     phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
