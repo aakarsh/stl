@@ -29,7 +29,7 @@ class ParserCtxSpec extends UnitSpec {
       term
     }
   }
-
+  /*
   it should "parse nested lambda" in { 
     assertResult((List(Eval(Abs("y",Abs("x",App(Var(0,2),Var(1,2)))))),List(("x",NameBinding()), ("y",NameBinding()))),""){
       val v = parser.parseCommands("lambda y. (lambda x. x y)",emptycontext)
@@ -48,7 +48,7 @@ class ParserCtxSpec extends UnitSpec {
       term
     }
   }
-
+   */
 
   it should "parse simple nested lambda " in {
     val t = parser.fromStringTerm("lambda x. lambda z. x")(emptycontext)

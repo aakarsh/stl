@@ -10,6 +10,7 @@ import Syntax._;
   */
 object Evaluator  {
 
+  val parser = new LambdaParserCtx()
 
   def is_value(t:Term) : Boolean = {
     t match {
@@ -36,8 +37,7 @@ object Evaluator  {
     }
   }
 
-
-  def eval1(term: Term,ctx : Context ): Term =  {
+  def eval1(term:Term,ctx:Context): Term =  {
 
     def eval_numerical(t1:Term,ctx:Context) = {
       val result = eval1(t1,ctx)
@@ -82,6 +82,7 @@ object Evaluator  {
   def eval_empty(term:Term):Term = {
     eval(term,emptycontext)
   }
+
   def eval(term:Term,ctx:Context):Term = {
     try {
       val t = eval1(term,ctx)
@@ -91,17 +92,63 @@ object Evaluator  {
     }
   }
 
+  def processFile(in_file:String,ctx:Context) ={
+    val reader  = new FileReader(in_file);
+    val lst:List[CtxCmd] = parser.parseReader(reader);
+
+    def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
+      val (rcmd,rctx)= cmd(ctx)
+      (rcmd::acc,rctx)
+    }
+
+    var rctx =  ctx
+    var rcmds = List[Command]();
+
+    for(cmd <-lst) {
+      val k = cmd(rctx)
+      val c = k._1
+      rctx = k._2
+      rctx  = processCommand(c,rctx)
+    }
+  }
+
+  def processCommand(cmd:Command,ctx:Context):Context =  {
+    cmd match {
+      case Eval(t)  => {
+        val t1 = eval(t,ctx)
+        print_result(t1)
+        println()
+        return ctx
+      }
+      case Bind(x,b) => {
+        val binding = evalBinding(b,ctx)
+        println("Adding x:"+binding+"to ctx" +ctx)
+        return addBinding(ctx,x,binding)
+      }
+    }
+  }
+
+  def evalBinding(b:Binding,ctx:Context) ={
+    b match {
+      case TmAbbBind(t) =>
+        val t1 = eval(t,ctx)
+        TmAbbBind(t1)
+      case t => t
+    }
+  }
+
 
   def parse(s:String,ctx:Context):List[Term] =  {
-    val lst = new LambdaParserCtx().fromString(s,ctx)
+
+    val lst = parser.fromString(s,ctx)
 
     def r(cmd:CtxTerm,ctx:Context,acc:List[Term]) ={
       val (rcmd,rctx)= cmd(ctx)
       (rcmd::acc,rctx)
     }
 
-    var rctx = ctx;
-    var rtms = List[Term]();
+    var rctx:Context = ctx;
+    var rtms:List[Term] = List[Term]();
 
     for(c <- lst) {
       val k = r(c,rctx,rtms);
@@ -116,19 +163,21 @@ object Evaluator  {
   def run_empty(prog: String) = {
     run(prog,emptycontext)
   }
+
   def run(prog: String,ctx:Context) = {
     val t = parse(prog,ctx)
     t.map(eval(_,ctx))
   }
 
+
   /*
   def run(reader:Reader,ctx:Context) = {
     //TODO need to return a nwe context
-    val parsed_result = new LambdaParserCtx().fromReader(reader,ctx)
+    val parsed_result = parser.fromReader(reader,ctx)
     parsed_result.map(t:Term => eval(t,ctx))
   }
-   */
 
+   */
   def run1(prog: String,ctx:Context) = {
     run(prog,ctx)(0)
   }

@@ -32,7 +32,9 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
 
 
-  def cmds:Parser[CtxCmds] =   rep(cmd<~SEMICOLON.*) ^^  {  
+  def cmds:Parser[List[CtxCmd]] =   rep(cmd<~SEMICOLON.*)
+  /*
+ ^^  {  
         lst:List[CtxCmd] =>  
         ctx:Context =>
         def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
@@ -50,6 +52,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 
        (rcmds,rctx)
   }
+   */
 
   def cmd:Parser[CtxCmd]=  
      ( term^^{ 
@@ -62,9 +65,6 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
              val b = ctxBind(ctx)
              (Bind(s,b), addName(ctx,s))
       })
-
-
-
 
   /// what is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
@@ -188,7 +188,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   /**
     * Used to process multiple semi-colon seperated commands
     */
-  def parseCommands(s:String,ctx:Context) : CtxCmds = {
+  def parseCommands(s:String) : List[CtxCmd] = {
     phrase(cmds)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
@@ -218,9 +218,15 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-
   def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = {
     phrase(expr)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
+      case Success(result,_) => result
+      case f: NoSuccess => scala.sys.error(f.msg)
+    }
+  }
+
+  def parseReader(r: java.io.Reader) : List[CtxCmd] = {
+    phrase(cmds)(new Scanner(new PagedSeqReader(PagedSeq.fromReader(r)))) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
     }

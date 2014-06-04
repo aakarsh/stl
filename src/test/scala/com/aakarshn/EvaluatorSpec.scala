@@ -53,14 +53,14 @@ class EvaluatorSpec extends UnitSpec {
 //    println(pair)
   }
 
-  /*
+
   it should "run simple simple-arithmetic.f file without any errores" in {
     //TODO use relative path
     val dir = "/home/aakarsh/src/scala/stl/src/main/resources/test-files/"
     val filename = dir+"simple-arithmetic.f"
-    Evaluator.runFile(filename);
+    Evaluator.processFile(filename,emptycontext);
   }
-   */
+
 
   
 }
