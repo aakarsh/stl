@@ -28,9 +28,9 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
   import Syntax._
 
-  def expr:Parser[List[CtxTerm]] = rep(term<~semi.*) 
+  def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 
 
-  def cmds:Parser[CtxCmds] =   rep(cmd<~semi.*) ^^  {  
+  def cmds:Parser[CtxCmds] =   rep(cmd<~SEMICOLON.*) ^^  {  
         lst:List[CtxCmd] =>  
         ctx:Context =>
         def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
@@ -48,26 +48,24 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
        (rcmds,rctx)
   }
 
+  def cmd:Parser[CtxCmd]=  
+     ( term^^{ 
+         case ctxTrm => ctx:Context =>
+           val (t,rctx) = ctxTrm(ctx)
+           (Eval(t),rctx)
+     }
+     | ident~binder^^{
+         case (s~ctxBind) => ctx:Context =>
+             val b = ctxBind(ctx)
+             (Bind(s,b), addName(ctx,s))
+      })
 
-  def cmd:Parser[CtxCmd]=  (
-        term^^{ case ctxTrm =>
-                    ctx:Context =>
-                        val (t,rctx) = ctxTrm(ctx)
-                        (Eval(t),rctx)
-        }
-      | ident~binder^^{ case (s~ctxBind) =>
-                             ctx:Context =>
-                                  val b = ctxBind(ctx)
-                                  (Bind(s,b), addName(ctx,s))
-      })  
 
-
-  def semi = accept(SpecialChar(';'))
-
+  /// what is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
-    (SpecialChar('\\')^^{
+     (SLASH^^{
       case (_) => {(ctx:Context) => NameBinding() }}
-    |SpecialChar('=')~term^^{
+    | EQ~term^^{
       case (_~t) =>{(ctx:Context) => 
         val (rt,rctx) = t(ctx)
         (TmAbbBind(rt))
@@ -120,14 +118,19 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
    }}
 
   def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
-  def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})
-  
+  def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})  
   def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~e) => 
-    { ctx:Context =>
+    {ctx:Context =>
        val (rterm,rctx) = e(ctx)
        (IsZero(rterm),rctx)
     }}
 
+  /**
+  def simple_term(e:CtxTerm) = { ctx:Context =>
+    val (rterm,rctx) = e(ctx)
+    (TermConstructor(rctx),rctx)
+  }
+ */
   def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => 
     val (rterm,rctx) = e(ctx)
     (Succ(rterm),rctx) 
@@ -204,5 +207,9 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
    }
 
   def fromStringTerm(s:String):CtxTerm = fromString[CtxTerm](term,s)  
+
+  def SEMICOLON = accept(SpecialChar(';'))
+  def SLASH = accept(SpecialChar('\\'))
+  def EQ = accept(SpecialChar('='))
 
 }
