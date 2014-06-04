@@ -97,12 +97,18 @@ object Evaluator  {
     val lst:List[CtxCmd] = parser.parseReader(s);
     processCommandList(lst,ctx)
   }
-  def processFile(in_file:String,ctx:Context) ={
+
+  def processFile(in_file:String) :scala.Unit = {
+    processFile(in_file,emptycontext)
+  }
+
+  def processFile(in_file:String,ctx:Context):scala.Unit ={
     val reader  = new FileReader(in_file);
     val lst:List[CtxCmd] = parser.parseReader(reader);
     processCommandList(lst,ctx)
   }
-  def processCommandList(lst:List[CtxCmd],ctx:Context)  = { 
+
+  def processCommandList(lst:List[CtxCmd],ctx:Context) :scala.Unit = { 
     def r(cmd:CtxCmd,ctx:Context,acc:List[Command]) ={
       val (rcmd,rctx)= cmd(ctx)
       (rcmd::acc,rctx)
@@ -176,20 +182,13 @@ object Evaluator  {
   }
 
 
-  /*
-  def run(reader:Reader,ctx:Context) = {
-    //TODO need to return a nwe context
-    val parsed_result = parser.fromReader(reader,ctx)
-    parsed_result.map(t:Term => eval(t,ctx))
-  }
-
-   */
   def run1(prog: String,ctx:Context) = {
     run(prog,ctx)(0)
   }
 
+
   def repl():scala.Unit = {
-    val ok = true
+    var ok = true
     while(ok) {
       print(repl_promt)
       val line = readLine();
@@ -200,10 +199,7 @@ object Evaluator  {
             val fname  = line.split(" ")(1)
             Evaluator.processFile(fname,emptycontext)
           }
-          case _  => {
-            processString(line,emptycontext)
-
-          }
+          case _  => processString(line,emptycontext)
         }
       }
       catch {
@@ -212,7 +208,6 @@ object Evaluator  {
       }
     }
   }
-
 
 
   def print_results(terms:List[Term]):scala.Unit = terms.map({ term =>
