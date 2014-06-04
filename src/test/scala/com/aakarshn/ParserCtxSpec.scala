@@ -18,48 +18,46 @@ class ParserCtxSpec extends UnitSpec {
   val parser = new LambdaParserCtx()
 
   "Term parser" should "parse lambda " in {
-    val evalit = parser.fromStringTerm("lambda x. x",emptycontext)
-
-    val term = evalit(emptycontext) // Contexted term
+    val term = parser.fromStringTerm("lambda x. x")(emptycontext)
     println(term);
-//    assert(Abs("x",UnresolveVar("x")) == v,"identity lambda parsed")
   }
 
+  //TODO fix parse commands
   it should "return eval" in {
-
-    assertResult((List
-      (Eval(Abs("x",Var(0,1)))),List(("x",NameBinding()))),""){
-      val v = parser.parseCommands("lambda x. x",emptycontext)
-      val term = v(emptycontext)
+    assertResult((Abs("x",Var(0,1)),List(("x",NameBinding()))),""){
+      val term = parser.fromStringTerm("lambda x. x")(emptycontext)
       println(term)
       term
     }
+  }
 
+  it should "parse nested lambda" in { 
     assertResult((List(Eval(Abs("y",Abs("x",App(Var(0,2),Var(1,2)))))),List(("x",NameBinding()), ("y",NameBinding()))),""){
       val v = parser.parseCommands("lambda y. (lambda x. x y)",emptycontext)
-      /*
-       (List(
-       Eval(Abs(y,Abs(x,App(Var(0,2),Var(0,2)))))),List((y,NameBinding())))
-       */
-      //Expected (List(Eval(Abs(x,Var(0,1)))),List((x,NameBinding()))), but got 
-      //(List(Eval(Abs(y,Abs(x,App(Var(0,2),Var(0,2)))))),List((y,NameBinding())))
       val term = v(emptycontext)
       println(term)
       term
     }
 
-    //?identifier expected??
-    //println(parser.parseCommands("x.\\;",emptycontext))
-
-
   }
+
+  it should "parse let " in {
+    assertResult( (List(Eval(Let("x",NumberTerm(2.0),Var(0,1)))),List(("x",NameBinding()))),""){
+      val v = parser.parseCommands("let x = 2 in x",emptycontext)
+      val term = v(emptycontext)
+      println(term)
+      term
+    }
+  }
+
+
+  it should "parse simple nested lambda " in {
+    val t = parser.fromStringTerm("lambda x. lambda z. x")(emptycontext)
+    assert((Abs("x",Abs("z",Var(1,2))),List(("z",NameBinding()), ("x",NameBinding())))  == t,"nested lambda 2")
+   }
+
 
   /*
-  it should "parse simple nested lambda " in {
-    val v = parser.fromStringTerm("lambda x. lambda z. x")
-    assert(Abs("x",Abs("z",UnresolveVar("x"))) == v,"nested lambda 2")
-  }
-
   it should "application parsing" in {
     val v =parser.fromStringTerm("x x x")
     println("Application parsing "+v)

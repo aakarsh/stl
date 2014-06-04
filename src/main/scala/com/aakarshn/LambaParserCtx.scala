@@ -101,7 +101,7 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
 */
 
   def term:(Parser[CtxTerm]) = (
-      app_term
+        app_term
       | number
       | var_term
       | string
@@ -120,9 +120,10 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     case(_~e1~_~e2~_~e3) =>
       {
         ctx:Context =>
-        val (r2,rctx) = e2(ctx)
+        var (r2,rctx) = e2(ctx)
+        rctx = addName(ctx,e1)
         val (r3,_) = e3(rctx)
-        (Let(e1,r2,r2),rctx)
+        (Let(e1,r2,r3),rctx)
       }
   }
 
@@ -223,12 +224,12 @@ class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-  def fromString[T](p:Parser[T],s:String,ctx:Context):T =
+  def fromString[T](p:Parser[T],s:String):T =
     phrase (p)(new Scanner(s)) match  {
       case Success(result,_) => result
       case f: NoSuccess => scala.sys.error(f.msg)
    }
 
-  def fromStringTerm(s:String,ctx:Context):CtxTerm = fromString[CtxTerm](term,s,ctx)  
+  def fromStringTerm(s:String):CtxTerm = fromString[CtxTerm](term,s)  
 
 }
