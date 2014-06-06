@@ -20,6 +20,9 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
     override def toString = chars
   }
 
+  val special_chars = List(';',':','=')
+
+  def special_char = elem("special_char", {special_chars.contains(_)})^^{SpecialChar(_)}
 
   override def token: Parser[Token] =
     (   identChar ~ rep( identChar | digit )^^ { case first ~ rest => processIdent(first :: rest mkString "") }
@@ -29,8 +32,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | '-' ~> whitespace ~ number ^^ { case ws ~ num => NumericLit("-" + num) }
       | number ^^ NumericLit
       | EofCh ^^^ EOF
-      | ';' ^^^ SpecialChar(';')
-      | '=' ^^^ SpecialChar('=')
+      | special_char
       | delim
       | '\"' ~> failure("Unterminated string")
       | '/' ^^^ SpecialChar('/')
