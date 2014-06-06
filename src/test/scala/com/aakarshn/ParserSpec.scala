@@ -16,7 +16,7 @@ import Syntax._
 
 class ParserCtxSpec extends UnitSpec {
 
-  val parser = new LambdaParserCtx()
+  val parser = new LambdaParser()
 
   "Parser" should "parse slash" in {
     val term = parser.parseCommands("x/;")

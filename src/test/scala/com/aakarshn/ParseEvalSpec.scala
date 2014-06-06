@@ -11,7 +11,7 @@ import Syntax._
 */
 class ParseEvalSpec extends UnitSpec {
 
-  val parser = new LambdaParserCtx()
+  val parser = new LambdaParser()
 
   "Integration " should "parse identity lambda" in {
     assertResult(True(),"Running identity returns identity got"){

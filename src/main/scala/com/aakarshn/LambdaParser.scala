@@ -20,7 +20,7 @@ import Syntax._;
 
 // Final Report : End  of next week
 
-class LambdaParserCtx extends StdTokenParsers with ImplicitConversions  {
+class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
   type Tokens = LambdaLexer
   val lexical  = new Tokens

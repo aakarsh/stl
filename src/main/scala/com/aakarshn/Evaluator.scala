@@ -11,7 +11,7 @@ import Syntax._;
   */
 object Evaluator  {
 
-  val parser = new LambdaParserCtx()
+  val parser = new LambdaParser()
   val repl_promt = "[STL] $ "
   val debug = true;
 
