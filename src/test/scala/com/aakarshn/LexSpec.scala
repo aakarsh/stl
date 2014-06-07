@@ -22,13 +22,18 @@ class LexSpec extends UnitSpec {
   "Lexer" should "get semi-colon" in {
     val scanner = new Scanner(";;")
     val f = scanner.first
-    assertResult(SpecialChar(';'),f){f}
+    assertResult(SpecialChar(";"),f){f}
   }
 
   it should "get backslash" in {
     val scanner = new Scanner("/")
     val f = scanner.first
-    assertResult(SpecialChar('/'),f){f}
+    assertResult(SpecialChar("/"),f){f}
+  }
+  it should "get arrow" in {
+    val scanner = new Scanner("->")
+    val f = scanner.first
+    assertResult(SpecialChar("->"),f){f}
   }
 
 

@@ -119,12 +119,38 @@ class ParserCtxSpec extends UnitSpec {
   }
 
 
-  "Parser" should "work" in {
+  it  should "work" in {
     assertResult(List(Abs("x",TyAny(),Abs("y",TyAny(),Var(1,2)))),"parsing abstraction failing"){
       parser.parse("(lambda x. lambda y. x)",emptycontext)
     }
   }
 
+  it should "parse simple abstraction " in {
+    assertResult(List(Abs("x",TyNat(),Var(0,1))),"parsing iimple abstraction fialing"){
+      parser.parse("lambda x:Nat. x",emptycontext)
+    }
+  }
+
+  it should "parse simple arrow type " in {
+    val expected =List(Abs("x",TyArrow(TyNat(),TyNat()),Var(0,1)))
+    assertResult(expected,"arrow type"){
+      parser.parse("lambda x:Nat->Nat . x",emptycontext)
+    }
+  }
+
+  it should "type parens " in {
+    val expected =List(Abs("x",TyArrow(TyNat(),TyNat()),Var(0,1)))
+    assertResult(expected,"arrow type"){
+     parser.parse("lambda x:(Nat->Nat) . x",emptycontext)
+    }
+  }
+
+  it should "nested arrows " in {
+    val expected = List(Abs("x",TyArrow(TyArrow(TyNat(),TyNat()),TyNat()),Var(0,1)))
+    assertResult(expected,"arrow type"){
+     parser.parse("lambda x:(Nat->Nat)->Nat . x",emptycontext)
+    }
+  }
   /*
 
   "Parser" should "now trying lexer dependent parser" in {

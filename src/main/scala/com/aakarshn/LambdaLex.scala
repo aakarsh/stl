@@ -29,9 +29,10 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | number ~ letter ^^ { case n ~ l => ErrorToken("Invalid number format : " + n + l) }
       | '-' ~> whitespace ~ number ~ letter ^^ { case ws ~ num ~ l => ErrorToken("Invalid number format : -" + num + l) }
       | '-' ~> whitespace ~ number ^^ { case ws ~ num => NumericLit("-" + num) }
+      | special_char
       | number ^^ NumericLit
       | EofCh ^^^ EOF
-      | special_char
+
       | delim
       | '\"' ~> failure("Unterminated string")
 //      | '/' ^^^ SpecialChar('/')
@@ -89,9 +90,12 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
   val hexDigits = Set[Char]() ++ "0123456789abcdefABCDEF".toArray
   def hexDigit = elem("hex digit", hexDigits.contains(_))
 
-  def special_char = elem("special_char", {special_chars.contains(_)})^^{SpecialChar(_)}
+  def special_char = (elem("special_char", {ch => 
+    special_chars.contains(ch)
+  })^^{s:Char=>SpecialChar(s.toString)}
+    | ('-'~'>') ^^ {_ =>SpecialChar("->") })
 
-  case class SpecialChar(char: Char) extends Token {
+  case class SpecialChar(char: String) extends Token {
     def chars = char.toString
     override def toString = chars
   }

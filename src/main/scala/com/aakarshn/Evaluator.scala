@@ -103,13 +103,13 @@ object Evaluator {
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)
         if(ty1 != TyBool()){
-          println("If conditional non boolean");
+          println("Warning: If conditional non boolean");
           TyAny()
         }
         val ty2 = typeof(t2,ctx)
         val ty3 = typeof(t3,ctx)
         if (ty2 != ty3){
-          println("Arms of conditional are not the same ty2:"+ty2+" ty3:"+ty3);
+          println("Warning: Arms of conditional are not the same ty2:"+ty2+" ty3:"+ty3);
           TyAny()
         }else {
           ty2;
@@ -117,7 +117,7 @@ object Evaluator {
       case Succ(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Type in Succ wrong "+ty)
+          println("Warning :Type in Succ wrong "+ty)
           TyAny()
         }else{
           TyNat()
@@ -125,7 +125,7 @@ object Evaluator {
       case Pred(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Type in Succ wrong "+ty)
+          println("Warning: Type in Succ wrong "+ty)
           TyAny()
         }else{
           TyNat()
@@ -133,12 +133,14 @@ object Evaluator {
       case IsZero(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Type in Succ wrong "+ty)
+          println("Warning:Type in Succ wrong "+ty)
           TyAny()
         }else {
           TyNat()
         }
-      case _ => TyAny()
+      case _ => 
+        println("Warning: Unknown type for " + term)
+        TyAny()
     }
   }
 

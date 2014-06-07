@@ -75,7 +75,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   )
 
   def let_term:Parser[CtxTerm] = 
-    Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
+    Keyword("let")~ident~elem(SpecialChar("="))~term~Keyword("in")~term ^^ {
     case(_~idName~_~e2~_~e3) =>
       {
         ctx:Context =>
@@ -95,13 +95,26 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
          (If(r1,r2,r3),ctx)
    }}
 
-  def type_parser:Parser[Type] = accept("Type",{
+  def atomic_type_parser:Parser[Type] = (
+     "("~> arrow_type_parser <~")"
+    |  accept("Type",{
     case Keyword("Bool") => TyBool()
     case Keyword("Nat") => TyNat()
     case Keyword("Unit") => TyUnit()
-  });
+  }))
 
-  def type_term:Parser[Type] = COLON~>type_parser 
+
+  def arrow_type_parser:Parser[Type] = (
+      
+    atomic_type_parser~SpecialChar("->")~arrow_type_parser ^^{
+      case (ty1~_~ty2) => TyArrow(ty1,ty2)}
+
+    |  atomic_type_parser
+)
+    
+
+
+  def type_term:Parser[Type] = COLON~>arrow_type_parser 
 
 
   def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~(type_term.?)~"."~term^^ {
@@ -216,8 +229,8 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       case(_~subterm) => toCtxTerm(term_constructor,subterm)
     }
 
-  def SEMICOLON = accept(SpecialChar(';'))
-  def SLASH = accept(SpecialChar('/'))
-  def EQ = accept(SpecialChar('='))
-  def COLON = accept(SpecialChar(':'))
+  def SEMICOLON = accept(SpecialChar(";"))
+  def SLASH = accept(SpecialChar("/"))
+  def EQ = accept(SpecialChar("="))
+  def COLON = accept(SpecialChar(":"))
 }
