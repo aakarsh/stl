@@ -36,8 +36,6 @@ object Syntax {
   type Context = List[(String,Binding)];
   val emptycontext:Context = List[(String,Binding)]();
 
-
-
   def addBinding(ctx:Context,x:String,bnd:Binding):Context = (x,bnd)::ctx
   def addName(ctx:Context,x:String)= addBinding(ctx,x,NameBinding())
   def isNameBound(ctx:Context,x:String) = (ctx.filter({case (s,_) => x == s})).length > 0

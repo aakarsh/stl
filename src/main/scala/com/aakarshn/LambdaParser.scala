@@ -110,14 +110,15 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
   def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})  
 
-  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~e) => 
+  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ 
+    case (_~e) =>
     {ctx:Context =>
        val (rterm,rctx) = e(ctx)
        (IsZero(rterm),rctx)
     }}
 
-
-  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => {ctx:Context => 
+  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => 
+    {ctx:Context =>
     val (rterm,rctx) = e(ctx)
     (Succ(rterm),rctx) 
    }}
@@ -165,16 +166,12 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
    */ 
   def parseCommands(s:String) : List[CtxCmd] = withParser(cmds,s)
   def parseCommands(r: java.io.Reader) : List[CtxCmd] = withParser(cmds,r)
-
   def parseCommand(s:String) : CtxCmd = withParser(cmd,s) 
-
   def parseExpression(s:String,ctx:Context) : List[CtxTerm] =  withParser(expr,s)
-//  def fromReader (r: java.io.Reader,ctx:Context) : (List[CtxTerm]) = withParser(expr,r)
 
-  def withParser[T](p:Parser[T],s:String):T = 
-    withParser(p,new Scanner(s))
+  def withParser[T](p:Parser[T],s:String):T = withParser(p,new Scanner(s))
 
-  def withParser[T] (p:Parser[T],r: java.io.Reader) : T = 
+  def withParser[T] (p:Parser[T],r: java.io.Reader):T = 
     withParser(p,new Scanner(new PagedSeqReader(PagedSeq.fromReader(r))))
 
   def withParser[T] (p:Parser[T],s:Scanner) : T =  {
@@ -184,10 +181,11 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     }
   }
 
-  def parseFirstTerm(s:String) :Term = parse(s,emptycontext)(0)
+  def parseFirstTerm(s:String) :Term = parseTermsN(s,0)
+
+  def parseTermsN(s:String,n:Int) = parseTerms(s)(n)
 
   def parseTerms(s:String) :List[Term] = parse(s,emptycontext)
-
 
   def parse(s:String,ctx:Context):List[Term] =  {
     val lst:List[CtxTerm] = parseExpression(s,ctx)
@@ -207,5 +205,5 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def SEMICOLON = accept(SpecialChar(';'))
   def SLASH = accept(SpecialChar('/'))
   def EQ = accept(SpecialChar('='))
-
+  def COLON = accept(SpecialChar(':'))
 }
