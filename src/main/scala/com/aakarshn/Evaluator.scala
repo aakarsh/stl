@@ -81,7 +81,6 @@ object Evaluator  {
     }
   }
 
-
   def eval_empty(term:Term):Term = {
     evalTerm(term,emptycontext)
   }
@@ -193,7 +192,6 @@ object Evaluator  {
       }
     }
   }
-
 
   def print_results(terms:List[Term]):scala.Unit = terms.map({ term =>
     print_result(term) ;

@@ -12,9 +12,32 @@ object Syntax {
   type CtxTerm = Context => (Term,Context)
   type CtxBind= Context => Binding
 
+  implicit def fromCtxTermToCtxTerm2(ctxTerm:CtxTerm) :CtxTerm2 =  new CtxTerm2{
+      def apply(ctx:Context):(Term,Context) = ctxTerm(ctx)
+  } 
+
+  implicit def fromCtxTerm2ToCtxTerm(ctxTerm:CtxTerm) :CtxTerm =  {
+    ctx:Context =>{ ctxTerm(ctx)}
+  }
+
   abstract class CtxTerm2  extends CtxTerm {
     def apply(in: Context): (Term,Context)
+
+    /**
+      Chains two contextual terms discarding the term produced by c1
+      */
+    def chainContexts(c2:CtxTerm):CtxTerm2 =new CtxTerm2 {
+      def apply(ctx:Context) :(Term,Context) = {
+        val (_,rctx) = this(ctx)
+        val (rterm2,rctx2) = c2(rctx)
+        (rterm2,rctx2)
+      }
+    }
+
+    def >>(c2:CtxTerm2) = this.chainContexts(_)
   }
+
+
 
   /**
     Raises a term into a CtxTerm which leaves ctx unchanged
@@ -96,6 +119,13 @@ object Syntax {
     }
   }
     */
+
+  abstract class Type {  }
+  case class TyBool extends Type;
+  case class TyNat extends Type;
+  case class TyUnit extends Type;
+  case class TyArrow(t1:Type,t2:Type) extends Type;
+  case class TyInert(t1:Type) extends Type;
 
   abstract class Term {
 

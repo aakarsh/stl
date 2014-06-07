@@ -76,13 +76,13 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
   def let_term:Parser[CtxTerm] = 
     Keyword("let")~ident~elem(SpecialChar('='))~term~Keyword("in")~term ^^ {
-    case(_~e1~_~e2~_~e3) =>
+    case(_~idName~_~e2~_~e3) =>
       {
         ctx:Context =>
         var (r2,rctx) = e2(ctx)
-        rctx = addName(ctx,e1)
+        rctx = addName(ctx,idName)
         val (r3,_) = e3(rctx)
-        (Let(e1,r2,r3),rctx)
+        (Let(idName,r2,r3),rctx)
       }
   }
 
@@ -95,7 +95,9 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
          (If(r1,r2,r3),ctx)
    }}
 
-//  def type_term:Parser[CtxTerm] = COLON
+//  def type_parser:Parser[Type] =
+
+//  def type_term:Parser[CtxTerm] = COLON~type_parser
 
   def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~"."~term^^ {
     case (s~_~t) => 
@@ -188,6 +190,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     */
   def parser_subterms_0(s:String,term_constructor:()=>Term) =
     Keyword(s)^^^{toCtxTerm(term_constructor)}
+
 
   /**
     Generates parser which maps Keyword subterm => Term 
