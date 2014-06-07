@@ -107,19 +107,11 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         (Abs(s,rtm),rctx2)
    }}
 
-  def true_term:Parser[CtxTerm] =   Keyword("true")^^^(toCtxTerm(True))
-
-  def false_term:Parser[CtxTerm] = Keyword("false")^^^(toCtxTerm(False))
-
-  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~subterm) => 
-    toCtxTerm(IsZero,subterm) }
-
-  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~subterm) =>  
-    toCtxTerm(Succ,subterm)}
-
-  def pred:Parser[CtxTerm] =  Keyword("pred")~term^^{ case (_~subterm) => 
-    toCtxTerm(Pred,subterm)}
-
+  def true_term:Parser[CtxTerm] =   parser_subterms_0("true",True)
+  def false_term:Parser[CtxTerm] = parser_subterms_0("false",False)
+  def iszero:Parser[CtxTerm] =  parser_subterms_1("iszero",IsZero)
+  def succ:Parser[CtxTerm] =   parser_subterms_1("succ",Succ)
+  def pred:Parser[CtxTerm] =  parser_subterms_1("pred",Pred)
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
   //TODO make left associative
@@ -132,7 +124,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
              (App(r1tm,r2tm),ctx)
       }
     })
-
 
   def var_term:Parser[CtxTerm] = accept("string",{
     case Identifier(s) => 
@@ -190,6 +181,23 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     }
     rtms.reverse
   }  
+
+
+  /**
+    For generates parser of which maps Keyword => Term
+    eg. true,false
+    */
+  def parser_subterms_0(s:String,term_constructor:()=>Term) =
+    Keyword(s)^^^{toCtxTerm(term_constructor)}
+
+  /**
+    Generates parser which maps Keyword subterm => Term 
+    egs. iszero,pred,succ
+    */
+  def parser_subterms_1(s:String,term_constructor:Term=>Term) =
+    Keyword(s)~term^^ {
+      case(_~subterm) => toCtxTerm(term_constructor,subterm)
+    }
 
   def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
   def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()

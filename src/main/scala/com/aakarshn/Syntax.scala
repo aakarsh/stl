@@ -59,7 +59,7 @@ object Syntax {
 
 
   /**
-  def walkCtx(rterm:Term,):CtxTerm = { ctx:Context =>
+  def walkCtx(rterm:Term,rctx:):CtxTerm = { ctx:Context =>
     this match {
       Succ(rterm:Term) => {
         
