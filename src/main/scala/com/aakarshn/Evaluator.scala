@@ -218,7 +218,12 @@ object Evaluator {
       case Abs(name:String,_,body:Term) => print("lambda "+name+". "); print_result(body);
       case Var(x:Int,_) => print(x)
       case t:Term if is_numerical(t) => print(num_term(t))
-      case _ => throw NoRulesApply("print_result:Out of rules")
+      //for identifiers
+      case Succ(t) => print("succ "); print_result(t)
+      case Pred(t) => print("pred "); print_result(t)
+      case x => 
+        println("Unkown term "+x);
+        throw NoRulesApply("print_result:Out of rules")
     }
   }
 }

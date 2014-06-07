@@ -101,7 +101,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     case Keyword("Unit") => TyUnit()
   });
 
-
   def type_term:Parser[Type] = COLON~>type_parser 
 
 
