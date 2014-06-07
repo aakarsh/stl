@@ -78,7 +78,7 @@ object Syntax {
 
   abstract class Binding;
   case class NameBinding extends Binding;
-  case class VarBinding extends Binding;
+  case class VarBinding(t:Type) extends Binding;
   case class TmAbbBind(t:Term) extends Binding;
 
   // String variable name

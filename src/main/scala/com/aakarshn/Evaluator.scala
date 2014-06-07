@@ -101,6 +101,30 @@ object Evaluator {
       case Unit()    => TyUnit()
       case Zero()    => TyNat()
       case StringTerm(t) => TyString()
+
+      case App(t1:Term,t2:Term) =>{
+        val tyT1 = typeof(t1,ctx)
+        val tyT2 = typeof(t2,ctx)
+        tyT1 match {
+          case TyArrow(ty11,ty12) =>
+            // if argument type equal type of argument 
+            // return result typen
+            if (ty11 == tyT2) 
+              ty12
+            else {
+              println("Application : "+ty11+"argument type!= "+tyT2+"argumeent");
+              return TyAny()
+            }
+          case _  => {
+              println("Aplying non method "+tyT1);
+              return TyAny()
+          }
+        }
+      }
+      case Abs(x,tyT1,body:Term)=>
+        val rctx = addBinding(ctx,x,VarBinding(tyT1))
+        val bodyType =typeof(body,rctx)
+        TyArrow(tyT1,bodyType)
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)
         if(ty1 != TyBool()){
@@ -183,8 +207,9 @@ object Evaluator {
         val ty = typeof(t,ctx)
         val t1 = evalTerm(t,ctx)
         print_result(t1)
-        println(" :"+ty)
-//        println()
+        print(":") 
+        print_result(ty)
+        println()
         return ctx
       }
       case Bind(x,b) => {
@@ -261,6 +286,21 @@ object Evaluator {
         case _ => throw NoRulesApply("num_term:Not a number")
       }
     nt(0,prog)
+  }
+
+  def print_result(ty:Type):scala.Unit ={
+    ty match {
+      case  TyBool()=> print("Bool")
+      case  TyNat()=> print("Nat")
+      case  TyString()=> print("String")
+      case  TyUnit()=> print("Unit")
+      case  TyInert(ty)=> print_result(ty)
+      case  TyAny()=> print("Any")
+      case  TyArrow(ty1:Type,ty2:Type)=>
+        print_result(ty1)
+        print("->")
+        print_result(ty2)
+    }
   }
 
   def print_result(prog:Term):scala.Unit = {
