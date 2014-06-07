@@ -1,15 +1,14 @@
 package com.aakarshn 
 
-
 import scala.util.parsing.combinator._
 import scala.io.Source
 import java.io._
-import Syntax._;
+import Syntax._
 
 /**
   A direct port of the evaluator for simply typed lambda calculus.    
   */
-object Evaluator  {
+object Evaluator {
 
   val parser = new LambdaParser()
   val repl_promt = "[STL] $ "
@@ -17,7 +16,7 @@ object Evaluator  {
 
   def is_value(t:Term) : Boolean = {
     t match {
-      case Abs(_,_) => true
+      case Abs(_,_,_) => true
       case t if (is_numerical(t)|| is_boolean(t)) => true
       case _ => false
     }
@@ -67,9 +66,10 @@ object Evaluator  {
         Let(name,evalTerm1(t2,ctx),body)
       }
       //Lambda Calculus
-      case App(Abs(name:String,body:Term),v2) if is_value(v2) => {
+      case App(Abs(name:String,_,body:Term),v2) if is_value(v2) => {
         body.substitute(v2)
       }
+
       case App(v1:Term,t2:Term) if is_value(v1) =>{
         App(v1,evalTerm1(t2,ctx))
       }
@@ -215,7 +215,7 @@ object Evaluator  {
       case False() => print("false")
       case True() => print("true")
       case App(t1:Term,t2:Term) => print_result(t1) ; print(" "); print_result(t2);
-      case Abs(name:String,body:Term) => print("lambda "+name+". "); print_result(body);
+      case Abs(name:String,_,body:Term) => print("lambda "+name+". "); print_result(body);
       case Var(x:Int,_) => print(x)
       case t:Term if is_numerical(t) => print(num_term(t))
       case _ => throw NoRulesApply("print_result:Out of rules")

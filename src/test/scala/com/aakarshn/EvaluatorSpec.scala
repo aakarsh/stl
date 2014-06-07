@@ -31,11 +31,11 @@ class EvaluatorSpec extends UnitSpec {
 
   "Shifting" should "work" in {
       assert(Var(1,1) == Var(0,0).rshift(1),"term shift")
-      assert(Abs("x",Var(0,1)) == Abs("x",Var(0,0)).rshift(1), "term shift abstraction")
+      assert(Abs("x",TyAny(),Var(0,1)) == Abs("x",TyAny(),Var(0,0)).rshift(1), "term shift abstraction")
   }
 
   "Identity Eval" should "work" in {
-       val id_term = Abs("x",Var(0,0))
+       val id_term = Abs("x",TyAny(),Var(0,0))
       assert(True() == eval_empty(App(id_term,True())),"identiy eval is failing")
       assert(False() == eval_empty(App(id_term,False())),"identiy eval is failing")
       assert(Succ(Zero()) == eval_empty(App(id_term,Succ(Zero()))),"identity evaluation is failing")

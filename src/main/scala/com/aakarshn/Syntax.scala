@@ -115,6 +115,7 @@ object Syntax {
   case class TyUnit extends Type;
   case class TyArrow(t1:Type,t2:Type) extends Type;
   case class TyInert(t1:Type) extends Type;
+  case class TyAny() extends Type;
 
   abstract class Term {
 
@@ -158,9 +159,9 @@ object Syntax {
         case Var(x:Int,n:Int) => {
           onvar(cutoff,x,n)
         }
-        case Abs(name:String,body:Term) => {
+        case Abs(name:String,ty:Type,body:Term) => {
           // Entering abstraction
-          Abs(name,walk(cutoff+1, body))
+          Abs(name,ty,walk(cutoff+1, body))
         }
         case App(t1:Term,t2:Term) =>
           App(walk(cutoff,t1),
@@ -229,7 +230,7 @@ object Syntax {
   // id - id of the variable used for substitution
   case class Var(id:Int,n:Int) extends Term
   case class UnresolveVar(x:String) extends Term
-  case class Abs(name:String,body:Term) extends Term
+  case class Abs(name:String,var_type:Type,body:Term) extends Term
   case class App(t1:Term, t2:Term) extends Term
   case class Let(x:String,t1:Term, t2:Term) extends Term
 

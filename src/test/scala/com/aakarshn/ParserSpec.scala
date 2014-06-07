@@ -30,7 +30,7 @@ class ParserCtxSpec extends UnitSpec {
   }
 
   it should "return eval" in {
-    assertResult((Abs("x",Var(0,1)),List(("x",NameBinding()))),""){
+    assertResult((Abs("x",_,Var(0,1)),List(("x",NameBinding()))),""){
       val term = parser.fromStringTerm("lambda x. x")(emptycontext)
       println(term)
       term
@@ -61,7 +61,7 @@ class ParserCtxSpec extends UnitSpec {
 
   it should "parse simple nested lambda " in {
     val t = parser.fromStringTerm("lambda x. lambda z. x")(emptycontext)
-    assert((Abs("x",Abs("z",Var(1,2))),List(("z",NameBinding()), ("x",NameBinding())))  == t,"nested lambda 2")
+    assert((Abs("x",TyAny(),Abs("z",TyAny(),Var(1,2))),List(("z",NameBinding()), ("x",NameBinding())))  == t,"nested lambda 2")
    }
 
 
@@ -74,9 +74,9 @@ class ParserCtxSpec extends UnitSpec {
 
   it should "generate nameless representation " in {
     val v = parser.parseExpression("lambda x. lambda y. lambda z. x y z",emptycontext)
-    assert(Abs("x",Abs("y",Abs("z",App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0)(emptycontext)._1,"hmm")
-    assert(Abs("x",App(Var(0,1),Var(0,1))) == parser.parseExpression("lambda x. x x",emptycontext)(0)(emptycontext)._1,"paring simple application")
-    assert(App(Abs("x",Var(0,1)),True()) == parser.parseExpression("(lambda x. x) true",emptycontext)(0)(emptycontext)._1,"paring simple application")
+    assert(Abs("x",TyAny(),Abs("y",TyAny(),Abs("z",TyAny(),App(Var(2,3),App(Var(1,3),Var(0,3)))))) == v(0)(emptycontext)._1,"hmm")
+    assert(Abs("x",TyAny(),App(Var(0,1),Var(0,1))) == parser.parseExpression("lambda x. x x",emptycontext)(0)(emptycontext)._1,"paring simple application")
+    assert(App(Abs("x",TyAny(),Var(0,1)),True()) == parser.parseExpression("(lambda x. x) true",emptycontext)(0)(emptycontext)._1,"paring simple application")
 
 
   }
@@ -120,7 +120,7 @@ class ParserCtxSpec extends UnitSpec {
 
 
   "Parser" should "work" in {
-    assertResult(List(Abs("x",Abs("y",Var(1,2)))),"parsing abstraction failing"){
+    assertResult(List(Abs("x",TyAny(),Abs("y",TyAny(),Var(1,2)))),"parsing abstraction failing"){
       parser.parse("(lambda x. lambda y. x)",emptycontext)
     }
   }

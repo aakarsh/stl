@@ -95,18 +95,30 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
          (If(r1,r2,r3),ctx)
    }}
 
-//  def type_parser:Parser[Type] =
+  def type_parser:Parser[Type] = accept("Type",{
+    case Keyword("Bool") => TyBool()
+    case Keyword("Nat") => TyNat()
+    case Keyword("Unit") => TyUnit()
+  });
 
-//  def type_term:Parser[CtxTerm] = COLON~type_parser
 
-  def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~"."~term^^ {
-    case (s~_~t) => 
+  def type_term:Parser[Type] = COLON~>type_parser 
+
+
+  def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~(type_term.?)~"."~term^^ {
+    case (s~ty~_~t) => 
       {ctx:Context =>
         val rctx = addName(ctx,s)
         val (rtm,rctx2) = t(rctx)
         if (debug) println("adding name "+s);
         if (debug) println("adding ctx "+ rctx2);
-        (Abs(s,rtm),rctx2)
+
+        val var_type = ty match {
+          case (Some(t)) => t
+          case (None) => TyAny()
+        }
+
+        (Abs(s,var_type,rtm),rctx2)
    }}
   
   def true_term:Parser[CtxTerm] =   parser_subterms_0("true",True)
@@ -154,10 +166,13 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def parseCommand(s:String) : CtxCmd = withParser(cmd,s) 
   def parseExpression(s:String,ctx:Context) : List[CtxTerm] =  withParser(expr,s)
 
+  def fromStringTerm(s:String):CtxTerm = withParser(term,s)
+
   def withParser[T](p:Parser[T],s:String):T = withParser(p,new Scanner(s))
 
   def withParser[T] (p:Parser[T],r: java.io.Reader):T = 
     withParser(p,new Scanner(new PagedSeqReader(PagedSeq.fromReader(r))))
+
 
   def withParser[T] (p:Parser[T],s:Scanner) : T =  {
     phrase(p)(s) match  {
@@ -197,11 +212,9 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     egs. iszero,pred,succ
     */
   def parser_subterms_1(s:String,term_constructor:Term=>Term) =
-    Keyword(s)~term^^ {
+    Keyword(s)~term ^^ {
       case(_~subterm) => toCtxTerm(term_constructor,subterm)
     }
-
-  def fromStringTerm(s:String):CtxTerm = withParser(term,s)
 
   def SEMICOLON = accept(SpecialChar(';'))
   def SLASH = accept(SpecialChar('/'))
