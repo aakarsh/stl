@@ -120,18 +120,17 @@ object Syntax {
     /**
       Term substitution
       */
-    def substitute(variable:Int,valueTerm:Term):Term = {
-      val j = variable
+    def substitute(varIndex:Int,valueTerm:Term):Term = {
       def on_vars(cutoff:Int , x:Int,n:Int):Term = {
-        if(x == j+cutoff){
-          valueTerm.rshift(cutoff)
+        if(x == varIndex+cutoff){// hmm....
+//        if(x == varIndex){
+          valueTerm.termShift(cutoff)
         } else {
           Var(x,n)
         }
       }
       map_vars(on_vars,0)
     }
-
 
     /**
       Perform top level that is value gets substituted for variable 0
@@ -140,10 +139,10 @@ object Syntax {
       /**
         Shift vars in value make 0 free then substitute it into body
         */
-      val substituted_body = this.substitute(0,value.rshift(1))
+      val substituted_body = this.substitute(0,value.termShift(1))
       // Now that 0 has been substituted
       // Shift back variables in the program body
-      substituted_body.lshift(1)
+      substituted_body.termShift(-1)
     }
 
     /**
@@ -155,7 +154,7 @@ object Syntax {
       d - variable index increment
       c - variable increment cutoff 
       */
-    def rshift(d:Int,c:Int) = { 
+    def termShift(d:Int,c:Int) = { 
       def on_vars(cutoff:Int,x:Int,n:Int):Term = {
         if(x >= cutoff){
           Var(x+d,n+d);
@@ -169,13 +168,12 @@ object Syntax {
     /**
       Term shifting
       */
-    def rshift(d:Int):Term = rshift(d,0)
-
-    def lshift(d:Int):Term = rshift(-1*d)
+    def termShift(d:Int):Term = termShift(d,0)
 
     def map_vars(onvar:(Int,Int,Int) => Term, c:Int):Term = map_vars(onvar,c,this);
 
     def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term):Term = {
+
       /**
         Walk over AST.        
         */
@@ -188,9 +186,7 @@ object Syntax {
           // Entering abstraction
           Abs(name,ty,walk(cutoff+1, body))
         }
-        case App(t1:Term,t2:Term) =>
-          App(walk(cutoff,t1),
-            walk(cutoff,t2))
+        case App(t1:Term,t2:Term) => App(walk(cutoff,t1), walk(cutoff,t2))
         case Fix(t1:Term) => Fix(walk(cutoff,t1))
         case t1:Term => t1
         case _ => throw NoRulesApply("map_vars :Failing in mapping")
@@ -199,12 +195,12 @@ object Syntax {
       walk(c, term)
     }
 
-    def term_substitute_top(s:Term,body:Term):Term = {
+    def term_substitute_top(value:Term,body:Term):Term = {
       //Shift vars in s make 0 free then substitute it into body
-      val substituted_body = body.substitute(0,s.rshift(1))
+      val substituted_body = body.substitute(0,value.termShift(1))
       // Now that 0 has been substituted
       // Shift back variables in the program body
-      substituted_body.lshift(1)
+      substituted_body.termShift(-1)
     }
   }
 

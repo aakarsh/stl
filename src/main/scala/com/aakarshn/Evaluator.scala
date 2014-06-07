@@ -17,7 +17,7 @@ object Evaluator {
   def is_value(t:Term) : Boolean = {
     t match {
       case Abs(_,_,_) => true
-      case t if (is_numerical(t)|| is_boolean(t)) => true
+      case t if (is_numerical(t) || is_boolean(t)) => true
       case _ => false
     }
   }

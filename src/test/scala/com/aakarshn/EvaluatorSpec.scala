@@ -30,8 +30,8 @@ class EvaluatorSpec extends UnitSpec {
   }
 
   "Shifting" should "work" in {
-      assert(Var(1,1) == Var(0,0).rshift(1),"term shift")
-      assert(Abs("x",TyAny(),Var(0,1)) == Abs("x",TyAny(),Var(0,0)).rshift(1), "term shift abstraction")
+      assert(Var(1,1) == Var(0,0).termShift(1),"term shift")
+      assert(Abs("x",TyAny(),Var(0,1)) == Abs("x",TyAny(),Var(0,0)).termShift(1), "term shift abstraction")
   }
 
   "Identity Eval" should "work" in {
