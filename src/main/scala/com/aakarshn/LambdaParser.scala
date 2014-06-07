@@ -68,6 +68,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       | if_term
       | succ
       | pred
+      | fix
       | iszero
       | lambda_term
       | let_term
@@ -135,6 +136,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def iszero:Parser[CtxTerm] =  parser_subterms_1("iszero",IsZero)
   def succ:Parser[CtxTerm] =   parser_subterms_1("succ",Succ)
   def pred:Parser[CtxTerm] =  parser_subterms_1("pred",Pred)
+  def fix:Parser[CtxTerm] =  parser_subterms_1("fix",Fix)
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
   //TODO make left associative

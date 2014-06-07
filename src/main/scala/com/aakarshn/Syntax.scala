@@ -234,7 +234,7 @@ object Syntax {
   case class Abs(name:String,var_type:Type,body:Term) extends Term
   case class App(t1:Term, t2:Term) extends Term
   case class Let(x:String,t1:Term, t2:Term) extends Term
-
+  case class Fix(t1:Term) extends Term
 
 
 }

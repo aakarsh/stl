@@ -77,6 +77,11 @@ object Evaluator {
         val r1 = evalTerm1(t2,ctx)
         App(r1,t2)
       }
+      case fixed_term@Fix(v1:Term) if is_value(v1) =>{
+        v1 match {
+          case Abs(_,_,abs_body) => fixed_term.substitute(abs_body)
+        }
+    }
       case _ => throw NoRulesApply("Out of rules")
     }
   }
