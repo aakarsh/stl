@@ -109,17 +109,6 @@ object Syntax {
     }
 
 
-
-  /**
-  def walkCtx(rterm:Term,rctx:):CtxTerm = { ctx:Context =>
-    this match {
-      Succ(rterm:Term) => {
-        
-      }
-    }
-  }
-    */
-
   abstract class Type {  }
   case class TyBool extends Type;
   case class TyNat extends Type;
