@@ -107,8 +107,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         (Abs(s,rtm),rctx2)
    }}
   
-
-
   def true_term:Parser[CtxTerm] =   parser_subterms_0("true",True)
   def false_term:Parser[CtxTerm] = parser_subterms_0("false",False)
   def iszero:Parser[CtxTerm] =  parser_subterms_1("iszero",IsZero)

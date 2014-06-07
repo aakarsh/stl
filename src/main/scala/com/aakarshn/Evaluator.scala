@@ -172,6 +172,7 @@ object Evaluator  {
 
   def repl():scala.Unit = {
     var ok = true
+    var ctx = emptycontext;
     while(ok) {
       print(repl_promt)
       val line = readLine();
@@ -180,9 +181,10 @@ object Evaluator  {
           case ":q" =>  ok = false;
           case ":l" =>  {
             val fname  = line.split(" ")(1)
-            Evaluator.processFile(fname,emptycontext)
+            ctx = Evaluator.processFile(fname,ctx)
           }
-          case _  => processString(line,emptycontext)
+          case _  => 
+            ctx = processString(line,ctx)
         }
       }
       catch {

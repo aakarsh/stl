@@ -12,6 +12,9 @@ object Syntax {
   type CtxTerm = Context => (Term,Context)
   type CtxBind= Context => Binding
 
+  abstract class CtxTerm2  extends CtxTerm {
+    def apply(in: Context): (Term,Context)
+  }
 
   /**
     Raises a term into a CtxTerm which leaves ctx unchanged
@@ -19,6 +22,7 @@ object Syntax {
   def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
   def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()
   def toCtxTerm(term_constructor:Term=>Term,subterm:CtxTerm) = toCtx(term_constructor,subterm)
+
 
   def toCtx[R](term_constructor:Term=>R,subterm:CtxTerm) = {
     ctx:Context=> {
@@ -35,7 +39,6 @@ object Syntax {
       val (rterm2,rctx2) = c2(rctx)
       (rterm2,rctx2)
   }
-
 
 
   type CtxCmd = Context=>(Command,Context)
@@ -96,8 +99,7 @@ object Syntax {
 
   abstract class Term {
 
-    def toCtx():CtxTerm = {ctx:Context => (this,ctx)}
-
+    def toCtx():CtxTerm = toCtxTerm(this)
 
     /**
       Term substitution
