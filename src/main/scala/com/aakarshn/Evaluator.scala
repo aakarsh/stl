@@ -69,7 +69,6 @@ object Evaluator {
       case App(Abs(name:String,_,body:Term),v2) if is_value(v2) => {
         body.substitute(v2)
       }
-
       case App(v1:Term,t2:Term) if is_value(v1) =>{
         App(v1,evalTerm1(t2,ctx))
       }
@@ -80,8 +79,12 @@ object Evaluator {
       case fixed_term@Fix(v1:Term) if is_value(v1) =>{
         v1 match {
           case Abs(_,_,abs_body) => fixed_term.substitute(abs_body)
+          case _ => 
+            throw NoRulesApply("Fix passed in non abstraction term "+v1)
         }
-    }
+      }
+      case Fix(t1:Term) => 
+        Fix(evalTerm1(t1,ctx))
       case _ => throw NoRulesApply("Out of rules")
     }
   }
@@ -106,6 +109,7 @@ object Evaluator {
       case Unit()    => TyUnit()
       case Zero()    => TyNat()
       case StringTerm(t) => TyString()
+      case NumberTerm(v:Double) => TyFloat()
 
       case App(t1:Term,t2:Term) =>{
         val tyT1 = typeof(t1,ctx)
@@ -128,7 +132,7 @@ object Evaluator {
       }
       case Abs(x,tyT1,body:Term)=>
         val rctx = addBinding(ctx,x,VarBinding(tyT1))
-        val bodyType =typeof(body,rctx)
+        val bodyType = typeof(body,rctx)
         TyArrow(tyT1,bodyType)
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)

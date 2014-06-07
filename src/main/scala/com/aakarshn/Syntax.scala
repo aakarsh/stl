@@ -42,10 +42,9 @@ object Syntax {
   /**
     Raises a term into a CtxTerm which leaves ctx unchanged
   */
-  def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
-  def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()
+  def toCtxTerm(term:Term):CtxTerm =  {ctx:Context => (term,ctx)}
+  def toCtxTerm(term_constructor:()=>Term):CtxTerm = toCtxTerm(term_constructor())
   def toCtxTerm(term_constructor:Term=>Term,subterm:CtxTerm) = toCtx(term_constructor,subterm)
-
 
   def toCtx[R](term_constructor:Term=>R,subterm:CtxTerm) = {
     ctx:Context=> {
@@ -62,7 +61,6 @@ object Syntax {
       val (rterm2,rctx2) = c2(rctx)
       (rterm2,rctx2)
   }
-
 
   type CtxCmd = Context=>(Command,Context)
   type CtxCmds = Context=>(List[Command],Context)
@@ -108,10 +106,10 @@ object Syntax {
       case (s,_)::rest => if (x == s) 0 else 1+(name2Index(rest,x))
     }
 
-
   abstract class Type {  }
   case class TyBool extends Type;
   case class TyNat extends Type;
+  case class TyFloat() extends Type;
   case class TyString extends Type;
   case class TyUnit extends Type;
   case class TyArrow(t1:Type,t2:Type) extends Type;
@@ -119,13 +117,21 @@ object Syntax {
   case class TyAny() extends Type;
 
   abstract class Term {
-
-    def toCtx():CtxTerm = toCtxTerm(this)
-
     /**
       Term substitution
       */
-    def substitute(variable:Int,value:Term) : Term = term_substitute(variable,value,this)
+    def substitute(variable:Int,valueTerm:Term):Term = {
+      val j = variable
+      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
+        if(x == j+cutoff){
+          valueTerm.rshift(cutoff)
+        } else {
+          Var(x,n)
+        }
+      }
+      map_vars(on_vars,0)
+    }
+
 
     /**
       Perform top level that is value gets substituted for variable 0
@@ -142,16 +148,34 @@ object Syntax {
 
     /**
       Term shifting with cutoff
+      Walk through the program AST.
+      Increment variable indices by d 
+      if they lie above the cutoff c
+
+      d - variable index increment
+      c - variable increment cutoff 
       */
-    def rshift(d:Int,c:Int) = term_shift(d,c,this)
+    def rshift(d:Int,c:Int) = { 
+      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
+        if(x >= cutoff){
+          Var(x+d,n+d);
+        } else {
+          Var(x,n+d);
+        }
+      }
+      map_vars(on_vars,c);
+    }
+
     /**
       Term shifting
       */
-    def rshift(d:Int):Term = term_shift(d,0,this)
+    def rshift(d:Int):Term = rshift(d,0)
 
-    def lshift(d:Int):Term = this.rshift(-1)
+    def lshift(d:Int):Term = rshift(-1*d)
 
-    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term) = {
+    def map_vars(onvar:(Int,Int,Int) => Term, c:Int):Term = map_vars(onvar,c,this);
+
+    def map_vars(onvar:(Int,Int,Int) => Term, c:Int, term:Term):Term = {
       /**
         Walk over AST.        
         */
@@ -167,49 +191,16 @@ object Syntax {
         case App(t1:Term,t2:Term) =>
           App(walk(cutoff,t1),
             walk(cutoff,t2))
+        case Fix(t1:Term) => Fix(walk(cutoff,t1))
         case t1:Term => t1
         case _ => throw NoRulesApply("map_vars :Failing in mapping")
       }
+
       walk(c, term)
     }
 
-    /**
-      Walk through the program AST.
-      Increment variable indices by d 
-      if they lie above the cutoff c
-
-      d - variable index increment
-      c - variable increment cutoff 
-      t - program ast
-      */
-    def term_shift(d:Int,c:Int,t:Term) = {
-
-      def on_vars(cutoff:Int,x:Int,n:Int):Term = {
-        if(x >= cutoff){
-          Var(x+d,n+d);
-        } else {
-          Var(x,n+d);
-        }
-      }
-      map_vars(on_vars,c,t);
-    }
-
-
-    def term_substitute(j:Int,s:Term,t:Term) : Term = {
-      def on_vars(cutoff:Int , x:Int,n:Int):Term = {
-        if(x == j+cutoff){
-          s.rshift(cutoff)
-        } else {
-          Var(x,n)
-        }
-      }
-      map_vars(on_vars,0,t)
-    }
-
     def term_substitute_top(s:Term,body:Term):Term = {
-      /**
-        Shift vars in s make 0 free then substitute it into body
-        */
+      //Shift vars in s make 0 free then substitute it into body
       val substituted_body = body.substitute(0,s.rshift(1))
       // Now that 0 has been substituted
       // Shift back variables in the program body
