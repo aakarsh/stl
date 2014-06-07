@@ -112,6 +112,7 @@ object Syntax {
   abstract class Type {  }
   case class TyBool extends Type;
   case class TyNat extends Type;
+  case class TyString extends Type;
   case class TyUnit extends Type;
   case class TyArrow(t1:Type,t2:Type) extends Type;
   case class TyInert(t1:Type) extends Type;

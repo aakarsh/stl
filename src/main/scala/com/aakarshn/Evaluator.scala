@@ -100,6 +100,7 @@ object Evaluator {
       case False()   => TyBool()
       case Unit()    => TyUnit()
       case Zero()    => TyNat()
+      case StringTerm(t) => TyString()
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)
         if(ty1 != TyBool()){
@@ -180,15 +181,15 @@ object Evaluator {
     cmd match {
       case Eval(t)  => {
         val ty = typeof(t,ctx)
-        println("Type :"+ty)
         val t1 = evalTerm(t,ctx)
         print_result(t1)
-        println()
+        println(" :"+ty)
+//        println()
         return ctx
       }
       case Bind(x,b) => {
         val binding = evalBinding(b,ctx)
-        if (debug) println("Adding x:"+binding+"to ctx" +ctx)
+        if (debug) println("Adding x:"+binding+"to ctx :[" +ctx+"]")
         return addBinding(ctx,x,binding)
       }
     }
@@ -273,6 +274,8 @@ object Evaluator {
       //for identifiers
       case Succ(t) => print("succ "); print_result(t)
       case Pred(t) => print("pred "); print_result(t)
+      case StringTerm(t) => 
+        print("\""+t+"\"");
       case x => 
         println("Unkown term "+x);
         throw NoRulesApply("print_result:Out of rules")

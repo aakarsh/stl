@@ -104,15 +104,11 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   }))
 
 
-  def arrow_type_parser:Parser[Type] = (
-      
+  def arrow_type_parser:Parser[Type] = (      
     atomic_type_parser~SpecialChar("->")~arrow_type_parser ^^{
       case (ty1~_~ty2) => TyArrow(ty1,ty2)}
-
     |  atomic_type_parser
 )
-    
-
 
   def type_term:Parser[Type] = COLON~>arrow_type_parser 
 
