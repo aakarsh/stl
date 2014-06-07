@@ -12,17 +12,16 @@ import java.io._
 // Mostly Ripped off from JSON Lexer
 class LambdaLexer extends StdLexical with ImplicitConversions { 
 
-  reserved ++= List("true", "false","if","then","else","iszero","succ","pred","lambda","let","in")
+  val types =List("Bool","Nat","Unit","String","Float")
+  val nat = List("iszero","succ","pred")
+  val if_k = List("if","then","else")
+  val base_vals = List("true","false")
+
+  reserved ++= types:::nat:::if_k:::base_vals:::List("lambda","let","in")
+
   delimiters ++= List("{", "}", "[", "]", ":", ",","(",")",".")
 
-  case class SpecialChar(char: Char) extends Token {
-    def chars = char.toString
-    override def toString = chars
-  }
-
-  val special_chars = List(';',':','=')
-
-  def special_char = elem("special_char", {special_chars.contains(_)})^^{SpecialChar(_)}
+  val special_chars = List(';',':','=','/')
 
   override def token: Parser[Token] =
     (   identChar ~ rep( identChar | digit )^^ { case first ~ rest => processIdent(first :: rest mkString "") }
@@ -35,7 +34,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | special_char
       | delim
       | '\"' ~> failure("Unterminated string")
-      | '/' ^^^ SpecialChar('/')
+//      | '/' ^^^ SpecialChar('/')
       | rep(letter) ^^ checkKeyword
       | failure("Illegal character"))
 
@@ -89,5 +88,12 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
 
   val hexDigits = Set[Char]() ++ "0123456789abcdefABCDEF".toArray
   def hexDigit = elem("hex digit", hexDigits.contains(_))
+
+  def special_char = elem("special_char", {special_chars.contains(_)})^^{SpecialChar(_)}
+
+  case class SpecialChar(char: Char) extends Token {
+    def chars = char.toString
+    override def toString = chars
+  }
 
 }

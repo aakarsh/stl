@@ -117,17 +117,18 @@
   (interactive "sFind file : ")
   (find-name-dired  scala-src-dir regexp))
 
+(defmacro an/sbt-alias(alias cmd)
+  (let* ((name (car (split-string cmd)))
+         (func-name (intern (concat "an/ensime-sbt-do-" alias))))
+    `(defun ,func-name()
+       (interactive)
+       (ensime-sbt-switch)
+       (ensime-sbt-action ,cmd))))
 
-
-(defun an/ensime-sbt-do-test ()
-  (interactive)
-  (ensime-sbt-switch)
-  (ensime-sbt-action "test"))
-
-(defun an/ensime-sbt-do-i() 
-  (interactive)
-  (ensime-sbt-switch)
-  (ensime-sbt-action "run -i"))
+(defun an/sbt-macros()
+  (an/sbt-alias "my-repl" "run -i")
+  (an/sbt-alias "i" "run -i")
+  (an/sbt-alias "test"  "test"))
 
 (defun an/scala-guess-class()
   (interactive)                  
@@ -152,6 +153,7 @@
 (add-hook 'ensime-mode-hook
   (lambda()
     (message "Initialize custom hooks")    
+    (an/sbt-macros)
     (define-key ensime-mode-map (kbd "C-c b t") 'ensime-sbt-do-compile)
     (define-key ensime-mode-map (kbd "C-c C-b t") 'an/ensime-sbt-do-test)
     (define-key ensime-mode-map (kbd "C-c C-b i") 'an/ensime-sbt-do-i)
