@@ -35,7 +35,7 @@ class EvaluatorSpec extends UnitSpec {
   }
 
   "Identity Eval" should "work" in {
-       val id_term = Abs("x",TyAny(),Var(0,0))
+      val id_term = Abs("x",TyAny(),Var(0,0))
       assert(True() == eval_empty(App(id_term,True())),"identiy eval is failing")
       assert(False() == eval_empty(App(id_term,False())),"identiy eval is failing")
       assert(Succ(Zero()) == eval_empty(App(id_term,Succ(Zero()))),"identity evaluation is failing")

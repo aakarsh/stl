@@ -109,6 +109,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       {ctx:Context =>
         val rctx = addName(ctx,s)
         val (rtm,rctx2) = t(rctx)
+
         if (debug) println("adding name "+s);
         if (debug) println("adding ctx "+ rctx2);
 

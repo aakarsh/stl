@@ -94,6 +94,54 @@ object Evaluator {
     }
   }
 
+  def typeof(term:Term,ctx:Context):Type = {
+    term match {
+      case True()    => TyBool()
+      case False()   => TyBool()
+      case Unit()    => TyUnit()
+      case Zero()    => TyNat()
+      case If(t1:Term,t2:Term,t3:Term) =>
+        val ty1 = typeof(t1,ctx)
+        if(ty1 != TyBool()){
+          println("If conditional non boolean");
+          TyAny()
+        }
+        val ty2 = typeof(t2,ctx)
+        val ty3 = typeof(t3,ctx)
+        if (ty2 != ty3){
+          println("Arms of conditional are not the same ty2:"+ty2+" ty3:"+ty3);
+          TyAny()
+        }else {
+          ty2;
+        }
+      case Succ(t1)  => 
+        val ty = typeof(t1,ctx)
+        if(ty != TyNat()){
+          println("Type in Succ wrong "+ty)
+          TyAny()
+        }else{
+          TyNat()
+        }
+      case Pred(t1)  => 
+        val ty = typeof(t1,ctx)
+        if(ty != TyNat()){
+          println("Type in Succ wrong "+ty)
+          TyAny()
+        }else{
+          TyNat()
+        }      
+      case IsZero(t1)  => 
+        val ty = typeof(t1,ctx)
+        if(ty != TyNat()){
+          println("Type in Succ wrong "+ty)
+          TyAny()
+        }else {
+          TyNat()
+        }
+      case _ => TyAny()
+    }
+  }
+
   def processString(s:String):scala.Unit = 
     processString(s,emptycontext)
 
@@ -129,6 +177,8 @@ object Evaluator {
   def processCommand(cmd:Command,ctx:Context):Context =  {
     cmd match {
       case Eval(t)  => {
+        val ty = typeof(t,ctx)
+        println("Type :"+ty)
         val t1 = evalTerm(t,ctx)
         print_result(t1)
         println()
