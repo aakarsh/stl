@@ -40,9 +40,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
            (Bind(s,b), addName(ctx,s))
     }
      | term^^{ 
-         case ctxTrm => ctx:Context =>
-         val (t,rctx) = ctxTrm(ctx)
-         (Eval(t),rctx)
+         case subterm =>  toCtx(Eval,subterm)
      })
 
   /// What is TmAbbABind supposed to do
@@ -97,6 +95,8 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
          (If(r1,r2,r3),ctx)
    }}
 
+//  def type_term:Parser[CtxTerm] = COLON
+
   def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~"."~term^^ {
     case (s~_~t) => 
       {ctx:Context =>
@@ -107,26 +107,19 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         (Abs(s,rtm),rctx2)
    }}
 
-  def true_term:Parser[CtxTerm] =   Keyword("true")^^^ ({ctx:Context => (True(),ctx)})
-  def false_term:Parser[CtxTerm] = Keyword("false")^^^ ({ctx:Context => (False(),ctx)})  
+  def true_term:Parser[CtxTerm] =   Keyword("true")^^^(toCtxTerm(True))
 
-  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ 
-    case (_~e) =>
-    {ctx:Context =>
-       val (rterm,rctx) = e(ctx)
-       (IsZero(rterm),rctx)
-    }}
+  def false_term:Parser[CtxTerm] = Keyword("false")^^^(toCtxTerm(False))
 
-  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~e) => 
-    {ctx:Context =>
-    val (rterm,rctx) = e(ctx)
-    (Succ(rterm),rctx) 
-   }}
+  def iszero:Parser[CtxTerm] =  Keyword("iszero")~term^^{ case (_~subterm) => 
+    toCtxTerm(IsZero,subterm) }
 
-  def pred:Parser[CtxTerm] =  Keyword("pred")~term^^{ case (_~e) => {ctx:Context =>
-    val (rterm,rctx) = e(ctx)
-    (Pred(rterm),rctx)
-  }}
+  def succ:Parser[CtxTerm] =  Keyword("succ")~term^^{ case (_~subterm) =>  
+    toCtxTerm(Succ,subterm)}
+
+  def pred:Parser[CtxTerm] =  Keyword("pred")~term^^{ case (_~subterm) => 
+    toCtxTerm(Pred,subterm)}
+
 
   //Need the folling associativiy f x y -> App(App(f,x),y)
   //TODO make left associative
@@ -140,6 +133,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       }
     })
 
+
   def var_term:Parser[CtxTerm] = accept("string",{
     case Identifier(s) => 
       ctx:Context =>
@@ -149,16 +143,14 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   })
 
   def string:Parser[CtxTerm] = accept("string",{
-    case StringLit(s) => 
-      ctx:Context => (StringTerm(s),ctx)
+    case StringLit(s) => toCtxTerm(StringTerm(s))
   })
 
   def number:Parser[CtxTerm] = accept("number",{
     case NumericLit(s) => 
-      ctx:Context =>
           val n = s.toDouble
-          if (n <= 0) (Zero(),ctx)
-          else (NumberTerm(n.toDouble),ctx)
+          if (n <= 0) toCtxTerm(Zero)
+          else toCtxTerm(NumberTerm(n.toDouble))
   })
 
   /**
@@ -191,7 +183,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     val lst:List[CtxTerm] = parseExpression(s,ctx)
     var rctx:Context = ctx;
     var rtms:List[Term] = List[Term]();
-
     for(c <- lst) {
       val k = c(rctx)
       rctx = k._2
@@ -199,6 +190,16 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     }
     rtms.reverse
   }  
+
+  def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
+  def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()
+  def toCtxTerm(term_constructor:Term=>Term,subterm:CtxTerm) = toCtx(term_constructor,subterm)
+
+  def toCtx[R](term_constructor:Term=>R,subterm:CtxTerm) = {
+    ctx:Context=> {
+    val (term:Term,rctx:Context) = subterm(ctx)
+    (term_constructor(term),rctx)
+  }}
 
   def fromStringTerm(s:String):CtxTerm = withParser(term,s)
 

@@ -170,25 +170,6 @@ object Evaluator  {
     }
   }
 
-
-
-  /**
-  def parse1(s:String,ctx:Context):Term =  parse(s,ctx)(0)
-
-  def run_empty(prog: String) = {
-    run(prog,emptycontext)
-  }
-
-  def run(prog: String,ctx:Context) = {
-    val t = parse(prog,ctx)
-    t.map(evalTerm(_,ctx))
-  }
-
-  def run1(prog: String,ctx:Context) = {
-    run(prog,ctx)(0)
-  }
-  */
-
   def repl():scala.Unit = {
     var ok = true
     while(ok) {

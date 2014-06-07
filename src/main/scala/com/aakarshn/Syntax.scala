@@ -58,9 +58,21 @@ object Syntax {
 
 
 
-
+  /**
+  def walkCtx(rterm:Term,):CtxTerm = { ctx:Context =>
+    this match {
+      Succ(rterm:Term) => {
+        
+      }
+    }
+  }
+    */
 
   abstract class Term {
+
+    def toCtx():CtxTerm = {ctx:Context => (this,ctx)}
+
+
     /**
       Term substitution
       */
@@ -94,7 +106,7 @@ object Syntax {
       /**
         Walk over AST.        
         */
-      def walk(cutoff:Int, term:Term):Term  = term match {
+    def walk(cutoff:Int, term:Term):Term  = term match {
 
         case Var(x:Int,n:Int) => {
           onvar(cutoff,x,n)
