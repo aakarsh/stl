@@ -106,6 +106,8 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         if (debug) println("adding ctx "+ rctx2);
         (Abs(s,rtm),rctx2)
    }}
+  
+
 
   def true_term:Parser[CtxTerm] =   parser_subterms_0("true",True)
   def false_term:Parser[CtxTerm] = parser_subterms_0("false",False)
@@ -182,7 +184,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     rtms.reverse
   }  
 
-
   /**
     For generates parser of which maps Keyword => Term
     eg. true,false
@@ -198,16 +199,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     Keyword(s)~term^^ {
       case(_~subterm) => toCtxTerm(term_constructor,subterm)
     }
-
-  def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
-  def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()
-  def toCtxTerm(term_constructor:Term=>Term,subterm:CtxTerm) = toCtx(term_constructor,subterm)
-
-  def toCtx[R](term_constructor:Term=>R,subterm:CtxTerm) = {
-    ctx:Context=> {
-    val (term:Term,rctx:Context) = subterm(ctx)
-    (term_constructor(term),rctx)
-  }}
 
   def fromStringTerm(s:String):CtxTerm = withParser(term,s)
 

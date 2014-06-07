@@ -12,6 +12,32 @@ object Syntax {
   type CtxTerm = Context => (Term,Context)
   type CtxBind= Context => Binding
 
+
+  /**
+    Raises a term into a CtxTerm which leaves ctx unchanged
+  */
+  def toCtxTerm(term:Term) =  {ctx:Context => (term,ctx)}
+  def toCtxTerm(term_constructor:()=>Term) = term_constructor().toCtx()
+  def toCtxTerm(term_constructor:Term=>Term,subterm:CtxTerm) = toCtx(term_constructor,subterm)
+
+  def toCtx[R](term_constructor:Term=>R,subterm:CtxTerm) = {
+    ctx:Context=> {
+    val (term:Term,rctx:Context) = subterm(ctx)
+    (term_constructor(term),rctx)
+  }}
+
+  /**
+    Chains two contextual terms discarding the term produced by c1
+   */
+  def ctx_chain_(c1:CtxTerm,c2:CtxTerm):CtxTerm ={
+    ctx:Context =>
+      val (rterm,rctx) = c1(ctx)
+      val (rterm2,rctx2) = c2(rctx)
+      (rterm2,rctx2)
+  }
+
+
+
   type CtxCmd = Context=>(Command,Context)
   type CtxCmds = Context=>(List[Command],Context)
 
