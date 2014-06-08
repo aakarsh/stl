@@ -113,6 +113,7 @@ object Syntax {
       case  TyBool()=> "Bool"
       case  TyNat()=> "Nat"
       case  TyString()=> "String"
+      case  TyFloat()=> "Float"
       case  TyUnit()=> "Unit"
       case  TyInert(ty)=> ty.toPrettyPrint
       case  TyAny()=> "Any"
@@ -152,9 +153,9 @@ object Syntax {
       */
     def substitute(value:Term):Term  = {
       /**
-        Shift vars in value make 0 free then substitute it into body
-        */
-      val substituted_body = this.substitute(0,value.termShift(1))
+       Shift vars in value make 0 free then substitute it into body
+      */
+      val substituted_body = substitute(0,value.termShift(1))
       // Now that 0 has been substituted
       // Shift back variables in the program body
       substituted_body.termShift(-1)
@@ -197,6 +198,7 @@ object Syntax {
         case Var(x:Int,n:Int) => {
           onvar(cutoff,x,n)
         }
+
         case Abs(name:String,ty:Type,body:Term) => {
           // Entering abstraction
           Abs(name,ty,walk(cutoff+1, body))
@@ -264,9 +266,9 @@ object Syntax {
         case Var(x:Int,_) => x.toString
         case t:Term if is_numerical() => num_term().toString
         //for identifiers
-        case Succ(t) => "succ "+ this.toPrettyPrint
-        case Pred(t) => "pred "+this.toPrettyPrint
-        case StringTerm(t) => "\""+this.toPrettyPrint+"\""
+        case Succ(t) => "succ ("+ t.toPrettyPrint+")"
+        case Pred(t) => "pred ("+t.toPrettyPrint+")"
+        case StringTerm(s) => "\""+s+"\""
         case x =>
           println("Unkown term "+x);
           throw NoRulesApply("print_result:Out of rules")

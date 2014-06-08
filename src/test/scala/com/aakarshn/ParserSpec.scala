@@ -14,7 +14,7 @@ import scala.util.parsing.combinator.syntactical._
 import Evaluator._
 import Syntax._
 
-class ParserCtxSpec extends UnitSpec {
+class ParserSpec extends UnitSpec {
 
   val parser = new LambdaParser()
 
@@ -30,7 +30,7 @@ class ParserCtxSpec extends UnitSpec {
   }
 
   it should "return eval" in {
-    assertResult((Abs("x",_,Var(0,1)),List(("x",NameBinding()))),""){
+    assertResult((Abs("x",TyAny(),_,Var(0,1)),List(("x",NameBinding()))),""){
       val term = parser.fromStringTerm("lambda x. x")(emptycontext)
       println(term)
       term
@@ -151,25 +151,32 @@ class ParserCtxSpec extends UnitSpec {
      parser.parse("lambda x:(Nat->Nat)->Nat . x",emptycontext)
     }
   }
-  /*
 
-  "Parser" should "now trying lexer dependent parser" in {
+
+  it should "now trying lexer dependent parser" in {
     val parser = new LambdaParser();
-    assertResult(Some(NumberTerm(10.0)),"got number parsed"){ parser.parseRaw("10") } 
-    assertResult(Some(StringTerm("hello")),"parsed string") {parser.parseRaw("\"hello\"")}
-    assertResult(Some(If(Zero(),Zero(),Zero())),"Failed if parsing") {parser.parseRaw("if 0 then 0 else 0")}
-    assertResult(Some(Abs("x",True())),"parsed string") {parser.parseRaw("lambda x. true")}
-    assertResult(Some(Abs("x",UnresolveVar("x"))),"parsed string") {parser.parseRaw("lambda x. x")}
-    assertResult(Some(App(UnresolveVar("x"),UnresolveVar("x"))),"[failing to successfully parse application x. x.]") 
-        {parser.parseRaw("x x")}
+    assertResult(NumberTerm(10.0),"got number parsed"){ parser.parseFirstTerm("10") } 
+    assertResult(StringTerm("hello"),"parsed string") {parser.parseFirstTerm("\"hello\"")}
+    assertResult(If(Zero(),Zero(),Zero()),"Failed if parsing") {parser.parseFirstTerm("if 0 then 0 else 0")}
+    assertResult(Abs("x",TyAny(),True()),"parsed string") {parser.parseFirstTerm("lambda x. true")}
+    assertResult(Abs("x",TyAny(),Var(0,1)),"parsed string") {parser.parseFirstTerm("lambda x. x")}
+  }
 
-    /*
-    assertResult(Some(App(Abs("x",Abs("y",Abs("f",App(App(UnresolveVar("f"),UnresolveVar("x")),UnresolveVar("y"))))),App(True(),True()))),"[fixed old?]"){
-      parser.parseRaw("((lambda x. lambda y. lambda f. (f x) y) true) true")
-//      parser.parseRaw("((lambda x. lambda y. lambda f. f x y) true) true")
-//      parser.parseRaw("f x y")
+  it should "undefined variables  " in {
+    intercept[RuntimeException] {
+      assertResult(App(UnresolveVar("x"),UnresolveVar("x")),"[failing to successfully parse application x. x.]")
+      {parser.parseFirstTerm("x x")}
     }
-     */
+  }
+
+
+  it should "fail 3  " in   {
+    val expected = App(App(Abs("x",TyAny(),Abs("y",TyAny(),Abs("f",TyAny(),App(Var(0,3),App(Var(2,3),Var(1,3)))))),True()),True())
+    assertResult(expected,"[fixed old?]"){
+      parser.parseFirstTerm("((lambda x. lambda y. lambda f. (f x) y) true) true")
+      parser.parseFirstTerm("((lambda x. lambda y. lambda f. f x y) true) true")
+    }
+
   }
 
   "Lexer" should "tag string literals" in {
@@ -193,17 +200,17 @@ class ParserCtxSpec extends UnitSpec {
 
   it should "semicolon as seperator" in {
     assertResult(List(True(),True()),"") { 
-      parser.fromString("true;true")
+      parser.parseTerms("true;true")
     }
   }
 
 
   it should "semicolon as end of input" in {
-    assertResult(List(True()),"") { 
-      parser.fromString("true;")
+    assertResult(True(),"") { 
+      parser.parseFirstTerm("true;")
     }
   }
-   */
+
 
   it should "parse let statement" in {
     assertResult(Let("x",True(),Var(0,1)),"") {
