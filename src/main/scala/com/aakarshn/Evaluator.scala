@@ -14,10 +14,11 @@ object Evaluator {
   val repl_promt = "[STL] $ "
   val debug = true;
 
+  /*
   def is_value(t:Term) : Boolean = {
     t match {
       case Abs(_,_,_) => true
-      case t if (is_numerical(t) || is_boolean(t)) => true
+       case t if (is_numerical(t) || is_boolean(t)) => true
       case _ => false
     }
   }
@@ -39,11 +40,12 @@ object Evaluator {
     }
   }
 
+   */
   def evalTerm1(term:Term,ctx:Context): Term =  {
 
     def eval_numerical(t1:Term,ctx:Context) = {
       val result = evalTerm1(t1,ctx)
-      require(is_numerical(result))
+      require(result.is_numerical)
       result
     }
 
@@ -59,24 +61,24 @@ object Evaluator {
       case  IsZero(Succ(t:Term)) => False()
       case  IsZero(Pred(t:Term)) => False()
       case  IsZero(t1) => IsZero(evalTerm1(t1,ctx))
-      case  Let(name:String,v2:Term,body:Term) if is_value(v2) => {
+      case  Let(name:String,v2:Term,body:Term) if v2.is_value => {
         body.substitute(v2)
       }
       case  Let(name:String,t2:Term,body:Term) => {
         Let(name,evalTerm1(t2,ctx),body)
       }
       //Lambda Calculus
-      case App(Abs(name:String,_,body:Term),v2) if is_value(v2) => {
+      case App(Abs(name:String,_,body:Term),v2) if v2.is_value => {
         body.substitute(v2)
       }
-      case App(v1:Term,t2:Term) if is_value(v1) =>{
+      case App(v1:Term,t2:Term) if v1.is_value =>{
         App(v1,evalTerm1(t2,ctx))
       }
       case App(t1:Term,t2:Term) => {
         val r1 = evalTerm1(t2,ctx)
         App(r1,t2)
       }
-      case fixed_term@Fix(v1:Term) if is_value(v1) =>{
+      case fixed_term@Fix(v1:Term) if v1.is_value =>{
         v1 match {
           case Abs(_,_,abs_body) => fixed_term.substitute(abs_body)
           case _ => 
@@ -319,7 +321,7 @@ object Evaluator {
       case App(t1:Term,t2:Term) => print_result(t1) ; print(" "); print_result(t2);
       case Abs(name:String,_,body:Term) => print("lambda "+name+". "); print_result(body);
       case Var(x:Int,_) => print(x)
-      case t:Term if is_numerical(t) => print(num_term(t))
+      case t:Term if t.is_numerical => print(num_term(t))
       //for identifiers
       case Succ(t) => print("succ "); print_result(t)
       case Pred(t) => print("pred "); print_result(t)
@@ -330,6 +332,8 @@ object Evaluator {
         throw NoRulesApply("print_result:Out of rules")
     }
   }
+
+
 }
 
 

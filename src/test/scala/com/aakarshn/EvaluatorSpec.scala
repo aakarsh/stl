@@ -7,16 +7,16 @@ import Syntax._
 class EvaluatorSpec extends UnitSpec {
 
   "Numbers" should "be numerical"  in {
-      assert(is_numerical(Zero()))
-      assert(is_numerical(Succ(Zero())))
-      assert(is_numerical(Pred(Zero())))
+      assert(Zero().is_numerical())
+      assert(Succ(Zero()).is_numerical())
+      assert(Pred(Zero()).is_numerical())
   }
 
   "Values" should "be values" in {
-      assert(is_value(True()))
-      assert(is_value(False()))
-      assert(is_value(Succ(Zero())))
-      assert(is_value(Pred(Zero())))
+      assert(True().is_value())
+      assert(False().is_value())
+      assert(Succ(Zero()).is_value())
+      assert(Pred(Zero()).is_value())
   }
 
   "Eval" should "work" in {

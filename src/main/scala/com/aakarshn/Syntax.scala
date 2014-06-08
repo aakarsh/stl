@@ -202,6 +202,61 @@ object Syntax {
       // Shift back variables in the program body
       substituted_body.termShift(-1)
     }
+
+    def is_value() : Boolean = {
+      this  match {
+        case Abs(_,_,_) => true
+        case t if (is_numerical() || is_boolean()) => true
+        case _ => false
+      }
+    }
+
+    def is_boolean() : Boolean = {
+      this match{
+        case True()| False() => true
+        case _ => false
+      }
+    }
+
+    def is_numerical(): Boolean = {
+      this match {
+        case Zero() => true
+        case NumberTerm(_) => true
+        case Succ(t) => t.is_numerical()
+        case Pred(t) => t.is_numerical()
+        case _ => false
+      }
+    }
+
+    def num_term():Int =  {
+      def nt(acc:Int, n:Term):Int =
+        n match {
+          case Zero() => acc
+          case NumberTerm(n:Double) => n.toInt
+          case Succ(t1 :Term) => nt(acc+1,t1)
+          case Pred(t1:Term)  => nt(acc-1,t1)
+          case _ => throw NoRulesApply("num_term:Not a number")
+        }
+      nt(0,this)
+    }
+
+    def toPrettyPrint():String = {
+      this match {
+        case False() => "false"
+        case True() => "true"
+        case App(t1:Term,t2:Term) => t1.toPrettyPrint + " "+t2.toPrettyPrint
+        case Abs(name:String,_,body:Term) => "lambda "+name+". "+body.toPrettyPrint
+        case Var(x:Int,_) => x.toString
+        case t:Term if is_numerical() => num_term().toString
+        //for identifiers
+        case Succ(t) => "succ "+ this.toPrettyPrint
+        case Pred(t) => "pred "+this.toPrettyPrint
+        case StringTerm(t) => "\""+this.toPrettyPrint+"\""
+        case x =>
+          println("Unkown term "+x);
+          throw NoRulesApply("print_result:Out of rules")
+      }
+    }
   }
 
   case class Unit extends Term
