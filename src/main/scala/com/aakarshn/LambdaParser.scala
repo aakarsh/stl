@@ -69,7 +69,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       | succ
       | pred
       | fix
-      | iszero
+          | iszero
       | lambda_term
       | let_term
       | "("~>term<~")"

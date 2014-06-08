@@ -23,41 +23,40 @@ class ParserSpec extends UnitSpec {
     println(term);
   }
 
-  /*
+
   "Term parser" should "parse lambda " in {
     val term = parser.fromStringTerm("lambda x. x")(emptycontext)
     println(term);
   }
 
+
+    
   it should "return eval" in {
-    assertResult((Abs("x",TyAny(),_,Var(0,1)),List(("x",NameBinding()))),""){
+    assertResult((Abs("x",TyAny(),Var(0,1)),List(("x",NameBinding()))),""){
       val term = parser.fromStringTerm("lambda x. x")(emptycontext)
       println(term)
       term
     }
   }
 
-  */
-  /*
+
   it should "parse nested lambda" in { 
-    assertResult((List(Eval(Abs("y",Abs("x",App(Var(0,2),Var(1,2)))))),List(("x",NameBinding()), ("y",NameBinding()))),""){
-      val v = parser.parseCommands("lambda y. (lambda x. x y)",emptycontext)
-      val term = v(emptycontext)
-      println(term)
-      term
+
+    val exp = Abs("y",TyAny(),Abs("x",TyAny(),App(Var(0,2),Var(1,2))))
+    assertResult(exp,""){
+      parser.parseFirstTerm("lambda y. (lambda x. x y)")
     }
 
   }
+
 
   it should "parse let " in {
-    assertResult( (List(Eval(Let("x",NumberTerm(2.0),Var(0,1)))),List(("x",NameBinding()))),""){
-      val v = parser.parseCommands("let x = 2 in x",emptycontext)
-      val term = v(emptycontext)
-      println(term)
-      term
+    val exp = Let("x",NumberTerm(2.0),Var(0,1))
+    assertResult(exp ,"hmm"){
+      parser.parseFirstTerm("let x = 2 in x")
     }
   }
-   */
+
 
   it should "parse simple nested lambda " in {
     val t = parser.fromStringTerm("lambda x. lambda z. x")(emptycontext)
@@ -101,15 +100,15 @@ class ParserSpec extends UnitSpec {
   }  
 
 
-  "Parser" should "parse simple arithmetic expressions" in {
-      assertResult(Succ(Pred(Zero())),"()  evaluation not working"){
-         parser.parse("succ(pred(0))",emptycontext)(0)
-      }
+  it should "parse simple arithmetic expressions" in {
+    assertResult(Succ(Pred(Zero())),"()  evaluation not working"){
+      parser.parse("succ(pred(0))",emptycontext)(0)
+    }
 
-      assertResult(Succ(Zero()), "parsing atomic true not working"){
-        parser.parse("succ 0",emptycontext)(0)
+    assertResult(Succ(Zero()), "parsing atomic true not working"){
+      parser.parse("succ 0",emptycontext)(0)
 
-      }
+    }
   }
 
   it should "parse simple boolean" in {
@@ -117,7 +116,6 @@ class ParserSpec extends UnitSpec {
       parser.parse("true",emptycontext)(0)
     }
   }
-
 
   it  should "work" in {
     assertResult(List(Abs("x",TyAny(),Abs("y",TyAny(),Var(1,2)))),"parsing abstraction failing"){
@@ -176,7 +174,6 @@ class ParserSpec extends UnitSpec {
       parser.parseFirstTerm("((lambda x. lambda y. lambda f. (f x) y) true) true")
       parser.parseFirstTerm("((lambda x. lambda y. lambda f. f x y) true) true")
     }
-
   }
 
   "Lexer" should "tag string literals" in {
@@ -191,10 +188,6 @@ class ParserSpec extends UnitSpec {
     assertResult(lexical.Keyword("lambda")){ new lexical.Scanner("lambda x. true").first }
     assertResult(lexical.Identifier("xoxo")){new lexical.Scanner("lambda xoxo. true").rest.first}
     assertResult(lexical.Identifier("xoxo")){new lexical.Scanner("lambda xoxo. xoxo").rest.rest.rest.first}
-
-
-//    assert(true ==new lexical.Scanner("true"))
-
   }
 
 
@@ -204,35 +197,17 @@ class ParserSpec extends UnitSpec {
     }
   }
 
-
   it should "semicolon as end of input" in {
     assertResult(True(),"") { 
       parser.parseFirstTerm("true;")
     }
   }
 
-
   it should "parse let statement" in {
     assertResult(Let("x",True(),Var(0,1)),"") {
       parser.parseExpression("let x=true in x",emptycontext)(0)(emptycontext)._1
     }
   }
-
-
-  /**
-// BREAKING TEST
-  it should "allow application of multiple value functions" in {
-    parser.fromString("(lambda x. lambda y. lambda f. f x y) true true")
-  }
-  */
-
-  /**
-  it should "parse variable"  in {
-    val p = parse1("x")
-    println(p)
-    assert(UnresolveVar("x") == p)
-  }
-   */
 
 }
 
