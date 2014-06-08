@@ -190,8 +190,7 @@ object Evaluator {
       case Eval(t)  => {
         val ty = typeof(t,ctx)
         val t1 = evalTerm(t,ctx)
-        print(t1.toPrettyPrint+":") 
-        print_result(ty)
+        print(t1.toPrettyPrint+":"+ty.toPrettyPrint) 
         println()
         return ctx
       }
@@ -253,22 +252,6 @@ object Evaluator {
       }
     }
   }
-
-  def print_result(ty:Type):scala.Unit ={
-    ty match {
-      case  TyBool()=> print("Bool")
-      case  TyNat()=> print("Nat")
-      case  TyString()=> print("String")
-      case  TyUnit()=> print("Unit")
-      case  TyInert(ty)=> print_result(ty)
-      case  TyAny()=> print("Any")
-      case  TyArrow(ty1:Type,ty2:Type)=>
-        print_result(ty1)
-        print("->")
-        print_result(ty2)
-    }
-  }
-
 }
 
 

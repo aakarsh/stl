@@ -106,7 +106,22 @@ object Syntax {
       case (s,_)::rest => if (x == s) 0 else 1+(name2Index(rest,x))
     }
 
-  abstract class Type {  }
+  abstract class Type {  
+
+  def toPrettyPrint(): String ={
+    this match {
+      case  TyBool()=> "Bool"
+      case  TyNat()=> "Nat"
+      case  TyString()=> "String"
+      case  TyUnit()=> "Unit"
+      case  TyInert(ty)=> ty.toPrettyPrint
+      case  TyAny()=> "Any"
+      case  TyArrow(ty1:Type,ty2:Type)=>
+        ty1.toPrettyPrint+"->"+ty2.toPrettyPrint
+    }
+  }
+
+}
   case class TyBool extends Type;
   case class TyNat extends Type;
   case class TyFloat() extends Type;
