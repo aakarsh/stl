@@ -202,24 +202,6 @@ object Evaluator {
     }
   }
 
-
-  def processCommandInternal(cmd:Command,ctx:Context,th:TermHandler):Context =  {
-    cmd match {
-      case Eval(t)  => {
-        val t1 = evalTerm(t,ctx)
-        th(t1)
-//        print_result(t1)
-//        println()
-        return ctx
-      }
-      case Bind(x,b) => {
-        val binding = evalBinding(b,ctx)
-        if (debug) println("Adding x:"+binding+"to ctx" +ctx)
-        return addBinding(ctx,x,binding)
-      }
-    }
-  }
-
   def evalBinding(b:Binding,ctx:Context) ={
     b match {
       case TmAbbBind(t) =>
