@@ -14,33 +14,6 @@ object Evaluator {
   val repl_promt = "[STL] $ "
   val debug = true;
 
-  /*
-  def is_value(t:Term) : Boolean = {
-    t match {
-      case Abs(_,_,_) => true
-       case t if (is_numerical(t) || is_boolean(t)) => true
-      case _ => false
-    }
-  }
-
-  def is_boolean(t:Term) : Boolean = {
-    t match{
-      case True()| False() => true
-      case _ => false
-    }
-  }
-
-  def is_numerical(t:Term): Boolean = {
-    t match {
-      case Zero() => true
-      case NumberTerm(_) => true
-      case Succ(t) => is_numerical(t)
-      case Pred(t) => is_numerical(t)
-      case _ => false
-    }
-  }
-
-   */
   def evalTerm1(term:Term,ctx:Context): Term =  {
 
     def eval_numerical(t1:Term,ctx:Context) = {
@@ -217,8 +190,7 @@ object Evaluator {
       case Eval(t)  => {
         val ty = typeof(t,ctx)
         val t1 = evalTerm(t,ctx)
-        print_result(t1)
-        print(":") 
+        print(t1.toPrettyPrint+":") 
         print_result(ty)
         println()
         return ctx
@@ -282,23 +254,6 @@ object Evaluator {
     }
   }
 
-  def print_results(terms:List[Term]):scala.Unit = terms.map({ term =>
-    print_result(term) ;
-    println("");
-  })
-
-  def num_term(prog:Term):Int =  {
-    def nt(acc:Int, n:Term):Int =
-      n match {
-        case Zero() => acc
-        case NumberTerm(n:Double) => n.toInt
-        case Succ(t1 :Term) => nt(acc+1,t1)
-        case Pred(t1:Term)  => nt(acc-1,t1)
-        case _ => throw NoRulesApply("num_term:Not a number")
-      }
-    nt(0,prog)
-  }
-
   def print_result(ty:Type):scala.Unit ={
     ty match {
       case  TyBool()=> print("Bool")
@@ -313,26 +268,6 @@ object Evaluator {
         print_result(ty2)
     }
   }
-
-  def print_result(prog:Term):scala.Unit = {
-    prog match {
-      case False() => print("false")
-      case True() => print("true")
-      case App(t1:Term,t2:Term) => print_result(t1) ; print(" "); print_result(t2);
-      case Abs(name:String,_,body:Term) => print("lambda "+name+". "); print_result(body);
-      case Var(x:Int,_) => print(x)
-      case t:Term if t.is_numerical => print(num_term(t))
-      //for identifiers
-      case Succ(t) => print("succ "); print_result(t)
-      case Pred(t) => print("pred "); print_result(t)
-      case StringTerm(t) => 
-        print("\""+t+"\"");
-      case x => 
-        println("Unkown term "+x);
-        throw NoRulesApply("print_result:Out of rules")
-    }
-  }
-
 
 }
 
