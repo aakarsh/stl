@@ -23,6 +23,23 @@ object Evaluator {
     }
 
     term match {
+      case  Var(i:Int,_) => 
+        getBinding (ctx,i) match {
+          case NameBinding() => {
+            if(debug)
+              println("[debug]Name binding found at index "+i+"possibly for "+index2Name(ctx,i)+"not sure what to do")
+            Unit()
+          }
+          case VarBinding(tyT)  =>{
+            if(debug)
+              println("[debug]VarBinding found at index "+i+"possibly for "+index2Name(ctx,i)+"not sure what to do")
+            Unit()
+          }case TmAbbBind(v:Term) => {
+            if (debug)
+              println("[debug] TmAbbBind found at index "+i+" possibly for "+index2Name(ctx,i))
+            v
+          }
+        }
       case  If(True(),t2,t3) => t2
       case  If(False(),t2,t3) => t3
       case  If(t1:Term,t2:Term,t3:Term)   => If(evalTerm1(t1,ctx),t2,t3)
@@ -98,13 +115,13 @@ object Evaluator {
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)
         if(ty1 != TyBool()){
-          println("Warning: If conditional non boolean");
+          if(debug)println("[debug] Warning: If conditional non boolean");
           TyAny()
         }
         val ty2 = typeof(t2,ctx)
         val ty3 = typeof(t3,ctx)
         if (ty2 != ty3){
-          println("Warning: Arms of conditional are not the same ty2:"+ty2+" ty3:"+ty3);
+          if(debug)println("[debug] Warning: Arms of conditional are not the same ty2:"+ty2+" ty3:"+ty3);
           TyAny()
         }else {
           ty2;
@@ -112,7 +129,7 @@ object Evaluator {
       case Succ(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Warning :Type in Succ wrong "+ty)
+          if(debug) println("[debug]Warning :Type in Succ wrong "+ty)
           TyAny()
         }else{
           TyNat()
@@ -120,7 +137,7 @@ object Evaluator {
       case Pred(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Warning: Type in Succ wrong "+ty)
+          if(debug)println("[debug] Warning: Type in Succ wrong "+ty)
           TyAny()
         }else{
           TyNat()
@@ -128,10 +145,10 @@ object Evaluator {
       case IsZero(t1)  => 
         val ty = typeof(t1,ctx)
         if(ty != TyNat()){
-          println("Warning:Type in Succ wrong "+ty)
+          if (debug)println("[debug] Warning:Type in Succ wrong "+ty)
           TyAny()
         }else {
-          TyNat()
+          TyBool()
         }
       /*
         Lambda calculus constructs
@@ -146,11 +163,11 @@ object Evaluator {
             if (ty11 == tyT2) 
               ty12
             else {
-              println("Application : "+ty11+"argument type!= "+tyT2+"argumeent");
+              if(debug)println("[debug]Application : "+ty11+"argument type!= "+tyT2+"argumeent");
               return TyAny()
             }
           case _  => {
-              println("Applying non method "+tyT1);
+              if(debug) println("[debug]Applying non method "+tyT1);
               return TyAny()
           }
         }
@@ -160,14 +177,14 @@ object Evaluator {
       */
       case Abs(x,tyT1,body:Term)=>
         val rctx = addNameWithType(ctx,x,tyT1)
-        println("Adding to binding toContext \n"+rctx)
+        if(debug) println("[debug] Adding to binding toContext \n"+rctx)
         val bodyType = typeof(body,rctx)
         TyArrow(tyT1,bodyType)
       /*
        All failures in finding out the type end up here.
       */
       case _ => 
-        println("Warning: Unknown type for " + term)
+        if(debug)println("[debug]Warning: Unknown type for " + term)
         TyAny()
     }
   }
@@ -215,7 +232,7 @@ object Evaluator {
       }
       case Bind(x,b) => {
         val binding = evalBinding(b,ctx)
-        if (debug) println("Adding x:"+binding+"to ctx :[" +ctx+"]")
+        if (debug) println("[debug]Adding x:"+binding+"to ctx :[" +ctx+"]")
         return addBinding(ctx,x,binding)
       }
     }

@@ -47,7 +47,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def binder:Parser[CtxBind] = 
      (SLASH ^^ {
        case (_) =>{(ctx:Context) =>
-        if (debug) println("matched slash for name binding ")
+        if (debug) println("[debug]matched slash for name binding ")
         NameBinding()
        }}
     | EQ~term^^{
@@ -102,14 +102,14 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
               case Keyword("Nat") => TyNat()
               case Keyword("Unit") => TyUnit()
               case Keyword("Float") => TyFloat()
+              case Keyword("String") => TyString()
   }))
 
 
   def arrow_type_parser:Parser[Type] = (      
     atomic_type_parser~SpecialChar("->")~arrow_type_parser ^^{
       case (ty1~_~ty2) => TyArrow(ty1,ty2)}
-    |  atomic_type_parser
-)
+    |  atomic_type_parser)
 
   def type_term:Parser[Type] = COLON~>arrow_type_parser 
 
@@ -125,8 +125,8 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         val rctx = addNameWithType(ctx,s,var_type)
         val (rtm,rctx2) = t(rctx)
 
-        if (debug) println("adding name "+s+"\n new context : "+ctx);
-        if (debug) println("ctx "+ rctx2);
+        if (debug) println("[debug] adding name "+s+"\n[debug] new context : "+ctx);
+        if (debug) println("[debug] ctx "+ rctx2);
 
         (Abs(s,var_type,rtm),rctx2)
    }}
@@ -158,7 +158,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     case Identifier(s) => 
       ctx:Context =>
       val indx = name2Index(ctx,s)
-        if(debug) println("Saw Var :"+s+" Ctx"+ctx+"index "+indx)
+        if(debug) println("[debug]Saw Var :"+s+" Ctx"+ctx+"index "+indx)
         (Var(indx,ctx.length),ctx)
   })
 
