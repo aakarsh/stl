@@ -237,7 +237,15 @@ object Evaluator {
       }
     }
   }
+  /*
 
+  def checkBinding(b:Binding,ctx:Context) ={
+    b match{
+      case TmAbbBind(t:Term) => TmAbbBind(t,
+    }
+  }
+
+   */
   def evalBinding(b:Binding,ctx:Context) ={
     b match {
       case TmAbbBind(t) =>
