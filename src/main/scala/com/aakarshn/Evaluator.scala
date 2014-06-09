@@ -79,38 +79,22 @@ object Evaluator {
 
   def typeof(term:Term,ctx:Context):Type = {
     term match {
+      case Var(n:Int,_) => 
+        getTypeFromContext(ctx,n)
+
+      /*
+         Base constants
+       */
       case True()    => TyBool()
       case False()   => TyBool()
       case Unit()    => TyUnit()
       case Zero()    => TyNat()
       case StringTerm(t) => TyString()
       case NumberTerm(v:Double) => TyFloat()
-      case Var(n:Int,_) => 
-        getTypeFromContext(ctx,n)
-      case App(t1:Term,t2:Term) =>{
-        val tyT1 = typeof(t1,ctx)
-        val tyT2 = typeof(t2,ctx)
-        tyT1 match {
-          case TyArrow(ty11,ty12) =>
-            // if argument type equal type of argument 
-            // return result typen
-            if (ty11 == tyT2) 
-              ty12
-            else {
-              println("Application : "+ty11+"argument type!= "+tyT2+"argumeent");
-              return TyAny()
-            }
-          case _  => {
-              println("Applying non method "+tyT1);
-              return TyAny()
-          }
-        }
-      }
-      case Abs(x,tyT1,body:Term)=>
-        val rctx = addNameWithType(ctx,x,tyT1)
-        println("Adding to binding toContext \n"+rctx)
-        val bodyType = typeof(body,rctx)
-        TyArrow(tyT1,bodyType)
+
+      /*
+         Built in language constructs
+       */
       case If(t1:Term,t2:Term,t3:Term) =>
         val ty1 = typeof(t1,ctx)
         if(ty1 != TyBool()){
@@ -149,6 +133,39 @@ object Evaluator {
         }else {
           TyNat()
         }
+      /*
+        Lambda calculus constructs
+       */
+      case App(t1:Term,t2:Term) =>{
+        val tyT1 = typeof(t1,ctx)
+        val tyT2 = typeof(t2,ctx)
+        tyT1 match {
+          case TyArrow(ty11,ty12) =>
+            // if argument type equal type of argument 
+            // return result typen
+            if (ty11 == tyT2) 
+              ty12
+            else {
+              println("Application : "+ty11+"argument type!= "+tyT2+"argumeent");
+              return TyAny()
+            }
+          case _  => {
+              println("Applying non method "+tyT1);
+              return TyAny()
+          }
+        }
+      }
+      /*
+         Variables defined in abstractions get added to the context
+      */
+      case Abs(x,tyT1,body:Term)=>
+        val rctx = addNameWithType(ctx,x,tyT1)
+        println("Adding to binding toContext \n"+rctx)
+        val bodyType = typeof(body,rctx)
+        TyArrow(tyT1,bodyType)
+      /*
+       All failures in finding out the type end up here.
+      */
       case _ => 
         println("Warning: Unknown type for " + term)
         TyAny()

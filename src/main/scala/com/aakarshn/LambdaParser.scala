@@ -63,13 +63,12 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       | number
       | var_term
       | string
-      | true_term
-      | false_term
+      | base_value
       | if_term
       | succ
       | pred
       | fix
-          | iszero
+      | iszero
       | lambda_term
       | let_term
       | "("~>term<~")"
@@ -129,13 +128,15 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         if (debug) println("adding name "+s+"\n new context : "+ctx);
         if (debug) println("ctx "+ rctx2);
 
-
-
         (Abs(s,var_type,rtm),rctx2)
    }}
-  
-  def true_term:Parser[CtxTerm] =   parser_subterms_0("true",True)
-  def false_term:Parser[CtxTerm] = parser_subterms_0("false",False)
+
+  def base_value = ( 
+      parser_subterms_0("unit",Unit)
+    | parser_subterms_0("true",True)
+    | parser_subterms_0("false",False))
+
+
   def iszero:Parser[CtxTerm] =  parser_subterms_1("iszero",IsZero)
   def succ:Parser[CtxTerm] =   parser_subterms_1("succ",Succ)
   def pred:Parser[CtxTerm] =  parser_subterms_1("pred",Pred)
@@ -144,7 +145,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   //Need the folling associativiy f x y -> App(App(f,x),y)
   //TODO make left associative
   def app_term:Parser[CtxTerm] = (
-    ("("~>term<~")"| var_term | true_term | false_term )~term ^^ { 
+    ("("~>term<~")"| var_term | base_value )~term ^^ { 
     case (v1~t) => 
       { ctx:Context => 
              val (r1tm,_) = v1(ctx)

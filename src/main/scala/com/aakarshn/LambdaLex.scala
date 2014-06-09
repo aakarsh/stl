@@ -15,7 +15,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
   val types =List("Bool","Nat","Unit","String","Float")
   val nat = List("iszero","succ","pred")
   val if_k = List("if","then","else")
-  val base_vals = List("true","false")
+  val base_vals = List("true","false","unit")
 
   reserved ++= types:::nat:::if_k:::base_vals:::List("lambda","let","in","fix")
 
