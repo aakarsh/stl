@@ -86,6 +86,8 @@ object Evaluator {
       case StringTerm(t) => TyString()
       case NumberTerm(v:Double) => TyFloat()
 
+      case Var(n:Int,_) => getTypeFromContext(ctx,n)
+
       case App(t1:Term,t2:Term) =>{
         val tyT1 = typeof(t1,ctx)
         val tyT2 = typeof(t2,ctx)
@@ -100,13 +102,14 @@ object Evaluator {
               return TyAny()
             }
           case _  => {
-              println("Aplying non method "+tyT1);
+              println("Applying non method "+tyT1);
               return TyAny()
           }
         }
       }
       case Abs(x,tyT1,body:Term)=>
-        val rctx = addBinding(ctx,x,VarBinding(tyT1))
+        val rctx = addNameWithType(ctx,x,tyT1)
+        println("Adding to binding toContext \n"+rctx)
         val bodyType = typeof(body,rctx)
         TyArrow(tyT1,bodyType)
       case If(t1:Term,t2:Term,t3:Term) =>
@@ -185,12 +188,12 @@ object Evaluator {
   /**
     Returns context modified as a resutl of evaluating command
   */
-  def processCommand(cmd:Command,ctx:Context):Context =  {
+  def processCommand(cmd:Command,ctx:Context): Context =  {
     cmd match {
       case Eval(t)  => {
         val ty = typeof(t,ctx)
         val t1 = evalTerm(t,ctx)
-        print(t1.toPrettyPrint+":"+ty.toPrettyPrint) 
+        print(t1.toPrettyPrint(ctx)+":"+ty.toPrettyPrint) 
         println()
         return ctx
       }

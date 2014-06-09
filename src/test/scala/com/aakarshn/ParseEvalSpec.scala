@@ -17,7 +17,12 @@ class ParseEvalSpec extends UnitSpec {
     assertResult(True(),"Running identity returns identity got"){
       runFirst("(lambda x. x) true")
     }
+  }
 
+  it should "returning lambda abstraction " in {
+    assertResult(Abs("y",TyAny(),NumberTerm(1.0)), "Running fst "){
+      runFirst("(lambda x. lambda y. x) 1 2")
+    }
   }
 
   it should "parse true" in {

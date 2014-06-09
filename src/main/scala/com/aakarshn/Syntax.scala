@@ -88,6 +88,7 @@ object Syntax {
 
   def addBinding(ctx:Context,x:String,bnd:Binding):Context = (x,bnd)::ctx
   def addName(ctx:Context,x:String)= addBinding(ctx,x,NameBinding())
+  def addNameWithType(ctx:Context,x:String,ty:Type)= addBinding(ctx,x,VarBinding(ty))
   def isNameBound(ctx:Context,x:String) = (ctx.filter({case (s,_) => x == s})).length > 0
 
   def pickFreshName(ctx :Context,x:String):(Context,String) =
@@ -95,6 +96,17 @@ object Syntax {
       pickFreshName(ctx,x+"'")
     } else {
       (addName(ctx,x),x)
+    }
+
+
+  def getBinding(ctx:Context,n:Int) = ctx(n)._2
+
+  def getTypeFromContext(ctx:Context,index:Int):Type =
+    getBinding(ctx,index) match{
+      case VarBinding(ty:Type) => ty
+      case _ => 
+        println("unkown type biding for variable "+ index2Name(ctx,index))
+        TyAny()
     }
 
   //TODO add failure message
@@ -257,18 +269,24 @@ object Syntax {
       nt(0,this)
     }
 
-    def toPrettyPrint():String = {
+    def toPrettyPrint(ctx:Context):String = {
       this match {
         case False() => "false"
         case True() => "true"
-        case App(t1:Term,t2:Term) => t1.toPrettyPrint + " "+t2.toPrettyPrint
-        case Abs(name:String,_,body:Term) => "lambda "+name+". "+body.toPrettyPrint
-        case Var(x:Int,_) => x.toString
+        case App(t1:Term,t2:Term) => t1.toPrettyPrint(ctx) + " "+t2.toPrettyPrint(ctx)
+        case Abs(name:String,_,body:Term) => "lambda "+name+". "+body.toPrettyPrint(ctx)
+        case Var(x:Int,_) => try{ 
+          index2Name(ctx,x)
+        }catch {
+          case (e:Exception) => "?"+x.toString
+
+        }
         case t:Term if is_numerical() => num_term().toString
         //for identifiers
-        case Succ(t) => "succ ("+ t.toPrettyPrint+")"
-        case Pred(t) => "pred ("+t.toPrettyPrint+")"
+        case Succ(t) => "succ ("+ t.toPrettyPrint(ctx)+")"
+        case Pred(t) => "pred ("+t.toPrettyPrint(ctx)+")"
         case StringTerm(s) => "\""+s+"\""
+        case If(t1:Term,t2:Term,t3:Term) => "if ("+t1.toPrettyPrint(ctx)+") then {"+t2.toPrettyPrint(ctx)+"} else { " +t3.toPrettyPrint(ctx) +"}"
         case x =>
           println("Unkown term "+x);
           throw NoRulesApply("print_result:Out of rules")

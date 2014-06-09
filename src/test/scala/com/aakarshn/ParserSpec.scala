@@ -32,7 +32,7 @@ class ParserSpec extends UnitSpec {
 
     
   it should "return eval" in {
-    assertResult((Abs("x",TyAny(),Var(0,1)),List(("x",NameBinding()))),""){
+    assertResult((Abs("x",TyAny(),Var(0,1)),List(("x",VarBinding(TyAny())))),""){
       val term = parser.fromStringTerm("lambda x. x")(emptycontext)
       println(term)
       term
@@ -58,9 +58,10 @@ class ParserSpec extends UnitSpec {
   }
 
 
-  it should "parse simple nested lambda " in {
-    val t = parser.fromStringTerm("lambda x. lambda z. x")(emptycontext)
-    assert((Abs("x",TyAny(),Abs("z",TyAny(),Var(1,2))),List(("z",NameBinding()), ("x",NameBinding())))  == t,"nested lambda 2")
+  it should "test generated nested bindings " in {
+    assertResult(List(("z",VarBinding(TyAny())), ("x",VarBinding(TyAny()))), "nested lambda "){
+      parser.parseExpression("lambda x. lambda z. x",emptycontext)(0)(emptycontext)._2
+    }
    }
 
 

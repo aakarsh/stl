@@ -117,16 +117,18 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~(type_term.?)~"."~term^^ {
     case (s~ty~_~t) => 
       {ctx:Context =>
-        val rctx = addName(ctx,s)
-        val (rtm,rctx2) = t(rctx)
-
-        if (debug) println("adding name "+s);
-        if (debug) println("adding ctx "+ rctx2);
-
         val var_type = ty match {
           case (Some(t)) => t
           case (None) => TyAny()
         }
+
+        val rctx = addNameWithType(ctx,s,var_type)
+        val (rtm,rctx2) = t(rctx)
+
+        if (debug) println("adding name "+s+"\n new context : "+ctx);
+        if (debug) println("ctx "+ rctx2);
+
+
 
         (Abs(s,var_type,rtm),rctx2)
    }}
