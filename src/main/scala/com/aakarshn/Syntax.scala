@@ -77,7 +77,7 @@ object Syntax {
   abstract class Binding;
   case class NameBinding extends Binding;
   case class VarBinding(t:Type) extends Binding;
-  case class TmAbbBind(t:Term) extends Binding;
+  case class TmAbbBind(t:Term,ty:Type) extends Binding;
 
   // String variable name
   // Binding - VarBinding or NameBinding
@@ -104,6 +104,7 @@ object Syntax {
   def getTypeFromContext(ctx:Context,index:Int):Type =
     getBinding(ctx,index) match{
       case VarBinding(ty:Type) => ty
+      case TmAbbBind(_,ty:Type) => ty
       case _ => 
         println("unkown type biding for variable "+ index2Name(ctx,index))
         TyAny()

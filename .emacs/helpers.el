@@ -144,6 +144,11 @@
   (ensime-sbt-action
    (format "test-only com.aakarshn.%s" (an/scala-guess-class))))
 
+(defun an/ensime-sbt-do-compile()
+  (interactive)
+  (ensime-sbt-switch)
+  (ensime-sbt-action "compile"))
+
 (defun an/ensime-sbt-compile()
   (interactive)
   (ensime-sbt-switch)
@@ -155,8 +160,12 @@
     (message "Initialize custom hooks")    
     (an/sbt-macros)
     (define-key ensime-mode-map (kbd "C-c b t") 'ensime-sbt-do-compile)
+    (define-key ensime-mode-map (kbd "C-c c") 'an/ensime-sbt-do-compile)
+    (define-key ensime-mode-map (kbd "C-c t") 'an/ensime-sbt-do-test)
     (define-key ensime-mode-map (kbd "C-c C-b t") 'an/ensime-sbt-do-test)
     (define-key ensime-mode-map (kbd "C-c C-b i") 'an/ensime-sbt-do-i)
     (define-key ensime-mode-map (kbd "<f11>") 'an/ensime-sbt-compile)
     (define-key ensime-mode-map (kbd "<f12>") 'an/ensime-sbt-do-test)
 ))
+
+(global-set-key (kbd "C-c w") 'other-frame)

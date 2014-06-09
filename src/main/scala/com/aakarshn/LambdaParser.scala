@@ -37,7 +37,8 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
          case (s~ctxBind) => 
            ctx:Context =>
            val b = ctxBind(ctx)
-           (Bind(s,b), addName(ctx,s))
+           (Bind(s,b), addBinding(ctx,s,b))
+//             addName(ctx,s))
     }
      | term^^{ 
          case subterm =>  toCtx(Eval,subterm)
@@ -51,9 +52,10 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
         NameBinding()
        }}
     | EQ~term^^{
-      case (_~t) =>{(ctx:Context) => 
+      case (_~t) =>{
+        (ctx:Context) =>
         val (rt,rctx) = t(ctx)
-        (TmAbbBind(rt))
+        (TmAbbBind(rt,TyAny()))
       }})
 
   def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 

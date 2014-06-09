@@ -34,7 +34,7 @@ object Evaluator {
             if(debug)
               println("[debug]VarBinding found at index "+i+"possibly for "+index2Name(ctx,i)+"not sure what to do")
             Unit()
-          }case TmAbbBind(v:Term) => {
+          }case TmAbbBind(v:Term,_) => {
             if (debug)
               println("[debug] TmAbbBind found at index "+i+" possibly for "+index2Name(ctx,i))
             v
@@ -98,7 +98,6 @@ object Evaluator {
     term match {
       case Var(n:Int,_) => 
         getTypeFromContext(ctx,n)
-
       /*
          Base constants
        */
@@ -207,13 +206,21 @@ object Evaluator {
 
 
   def processCommandList(lst:List[CtxCmd],ctx:Context) :Context = { 
-    var rctx =  ctx
 
-    for(cmd <-lst) {
-      val k = cmd(rctx)
-      val c = k._1
-      rctx = k._2
-      rctx  = processCommand(c,rctx)
+    var cmds = List[Command]()
+    var rctx = ctx;
+
+    for(ctxCmd <- lst){
+      val (cmd,newctx)  = ctxCmd(rctx)
+      cmds = cmd::cmds
+      rctx = newctx
+    }
+    cmds.reverse
+
+    //parsing context
+    rctx =  ctx
+    for(cmd <- cmds) {
+      rctx = processCommand(cmd,rctx)
     }
     rctx
   }
@@ -222,35 +229,47 @@ object Evaluator {
     Returns context modified as a resutl of evaluating command
   */
   def processCommand(cmd:Command,ctx:Context): Context =  {
+    if(debug){
+      println("[debug] processCommand "+cmd)
+      println("[debug] with Context  "+ctx)
+    }
     cmd match {
       case Eval(t)  => {
         val ty = typeof(t,ctx)
         val t1 = evalTerm(t,ctx)
-        print(t1.toPrettyPrint(ctx)+":"+ty.toPrettyPrint) 
+        print(t1.toPrettyPrint(ctx)+"  : "+ty.toPrettyPrint) 
         println()
         return ctx
       }
       case Bind(x,b) => {
-        val binding = evalBinding(b,ctx)
+        val binding1  = checkBinding(b,ctx)
+        val binding = evalBinding(binding1,ctx)
         if (debug) println("[debug]Adding x:"+binding+"to ctx :[" +ctx+"]")
         return addBinding(ctx,x,binding)
       }
     }
   }
-  /*
 
   def checkBinding(b:Binding,ctx:Context) ={
     b match{
-      case TmAbbBind(t:Term) => TmAbbBind(t,
+      case TmAbbBind(t:Term,ty1:Type) => 
+        val ty2 = typeof(t,ctx)
+        if (ty1!= ty2){
+          println("[debug] binding  went from type "+ty1+" to  "+ty2)
+          TmAbbBind(t,ty2)
+        } else{
+          TmAbbBind(t,ty1)
+        }
+      case t => t
     }
   }
 
-   */
+
   def evalBinding(b:Binding,ctx:Context) ={
     b match {
-      case TmAbbBind(t) =>
+      case TmAbbBind(t,ty) =>
         val t1 = evalTerm(t,ctx)
-        TmAbbBind(t1)
+        TmAbbBind(t1,ty)
       case t => t
     }
   }
