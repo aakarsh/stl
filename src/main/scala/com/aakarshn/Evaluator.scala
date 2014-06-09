@@ -65,7 +65,7 @@ object Evaluator {
         App(v1,evalTerm1(t2,ctx))
       }
       case App(t1:Term,t2:Term) => {
-        val r1 = evalTerm1(t2,ctx)
+        val r1 = evalTerm1(t1,ctx)
         App(r1,t2)
       }
       case fixed_term@Fix(v1:Term) if v1.is_value =>{
