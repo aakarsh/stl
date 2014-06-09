@@ -36,7 +36,7 @@ object Evaluator {
             Unit()
           }case TmAbbBind(v:Term,_) => {
             if (debug)
-              println("[debug] TmAbbBind found at index "+i+" possibly for "+index2Name(ctx,i))
+              println("[debug] TmAbbBind found at index "+i+" possibly for "+index2Name(ctx,i)+"returning "+v)
             v
           }
         }
@@ -59,6 +59,8 @@ object Evaluator {
       }
       //Lambda Calculus
       case App(Abs(name:String,_,body:Term),v2) if v2.is_value => {
+        if(debug)
+          println("[debug] eval substituting for variable "+name)
         body.substitute(v2)
       }
       case App(v1:Term,t2:Term) if v1.is_value =>{
