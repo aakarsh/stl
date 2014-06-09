@@ -99,9 +99,10 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   def atomic_type_parser:Parser[Type] = (
      "("~> arrow_type_parser <~")"
     |  accept("Type",{
-    case Keyword("Bool") => TyBool()
-    case Keyword("Nat") => TyNat()
-    case Keyword("Unit") => TyUnit()
+              case Keyword("Bool") => TyBool()
+              case Keyword("Nat") => TyNat()
+              case Keyword("Unit") => TyUnit()
+              case Keyword("Float") => TyFloat()
   }))
 
 

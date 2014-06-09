@@ -85,9 +85,8 @@ object Evaluator {
       case Zero()    => TyNat()
       case StringTerm(t) => TyString()
       case NumberTerm(v:Double) => TyFloat()
-
-      case Var(n:Int,_) => getTypeFromContext(ctx,n)
-
+      case Var(n:Int,_) => 
+        getTypeFromContext(ctx,n)
       case App(t1:Term,t2:Term) =>{
         val tyT1 = typeof(t1,ctx)
         val tyT2 = typeof(t2,ctx)
