@@ -284,6 +284,7 @@ object Syntax {
         }
         case t:Term if is_numerical() => num_term().toString
         //for identifiers
+        case IsZero(t) => "iszero ("+ t.toPrettyPrint(ctx)+")"
         case Succ(t) => "succ ("+ t.toPrettyPrint(ctx)+")"
         case Pred(t) => "pred ("+t.toPrettyPrint(ctx)+")"
         case StringTerm(s) => "\""+s+"\""

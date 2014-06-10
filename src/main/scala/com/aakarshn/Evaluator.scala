@@ -70,11 +70,20 @@ object Evaluator {
         val r1 = evalTerm1(t1,ctx)
         App(r1,t2)
       }
-      case fixed_term@Fix(v1:Term) if v1.is_value =>{
-        v1 match {
-          case Abs(_,_,abs_body) => fixed_term.substitute(abs_body)
+      case fixed_term@Fix(fixed_body:Term) if fixed_body.is_value =>{
+        fixed_body match {
+          case Abs(_,_,abs_body) => {
+            if(debug) 
+              println("[debug]re-substituting fix body  "+fixed_body)
+
+            var r = fixed_body.substitute(fixed_term)
+
+            if(debug)
+              println("[debug] new fix term "+fixed_term)
+            r
+          }
           case _ => 
-            throw NoRulesApply("Fix passed in non abstraction term "+v1)
+            throw NoRulesApply("Fix passed in non abstraction term "+fixed_body)
         }
       }
       case Fix(t1:Term) => 
@@ -176,7 +185,7 @@ object Evaluator {
       /*
          Variables defined in abstractions get added to the context
       */
-      case Abs(x,tyT1,body:Term)=>
+      case Abs(x,tyT1,body:Term) =>
         val rctx = addNameWithType(ctx,x,tyT1)
         if(debug) println("[debug] Adding to binding toContext \n"+rctx)
         val bodyType = typeof(body,rctx)

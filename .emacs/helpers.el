@@ -4,7 +4,11 @@
 (defvar scala-src-dir "~/src/pub/scala/src")
 (defvar scala-src-lib-dir "~/src/pub/scala/src/library")
 (defvar combinator-dir "~/src/pub/scala-parser-combinators/")
+(defvar project-dir "/home/aakarsh/src/scala/stl/")
 (defvar scala-files-regexp "*.scala")
+
+(file-cache-add-directory project-dir ".*scala")
+
 
 (defvar an/scala-class-find-regexp
   "\\(\\(trait\\)\\|\\(class\\)\\)\s+\\([a-zA-Z0-9]+\\)")
