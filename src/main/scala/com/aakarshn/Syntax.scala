@@ -74,7 +74,15 @@ object Syntax {
   def decontext(ctxcmd:CtxCmd) = ctxcmd(emptycontext)
   def decontext(ctxcmd:CtxCmd,ctx:Context) = ctxcmd(ctx)
 
-  abstract class Binding;
+  abstract class Binding {
+    def prettyPrint(ctx:Context) :String = {
+      this match{
+        case NameBinding() => "NameBinding"
+        case VarBinding(ty:Type) => ty.toString
+        case TmAbbBind(t:Term,ty:Type) => t.toPrettyPrint(ctx) +" : "+ ty.toString
+      }
+    }
+  }
   case class NameBinding extends Binding;
   case class VarBinding(t:Type) extends Binding;
   case class TmAbbBind(t:Term,ty:Type) extends Binding;
@@ -85,6 +93,12 @@ object Syntax {
   // TODO think about makeing it a class??
   type Context = List[(String,Binding)];
   val emptycontext:Context = List[(String,Binding)]();
+
+  def toPrettyPrintCtx(ctx:Context) : scala.Unit ={
+    ctx.map({case (s:String,b:Binding) => {
+      print(s+":"+ b.prettyPrint(ctx))
+    }});
+  }
 
   def addBinding(ctx:Context,x:String,bnd:Binding):Context = (x,bnd)::ctx
   def addName(ctx:Context,x:String)= addBinding(ctx,x,NameBinding())
@@ -236,7 +250,7 @@ object Syntax {
     def is_value() : Boolean = {
       this  match {
         case Abs(_,_,_) => true
-        case t if (is_numerical() || is_boolean()) => true
+        case t if (isNat() || is_boolean()) => true
         case _ => false
       }
     }
@@ -248,12 +262,12 @@ object Syntax {
       }
     }
 
-    def is_numerical(): Boolean = {
+    def isNat(): Boolean = {
       this match {
         case Zero() => true
         case NumberTerm(_) => true
-        case Succ(t) => t.is_numerical()
-        case Pred(t) => t.is_numerical()
+        case Succ(t) => t.isNat()
+        case Pred(t) => t.isNat()
         case _ => false
       }
     }
@@ -262,7 +276,7 @@ object Syntax {
       def nt(acc:Int, n:Term):Int =
         n match {
           case Zero() => acc
-          case NumberTerm(n:Double) => n.toInt
+          case NumberTerm(n:Int) => n.toInt
           case Succ(t1 :Term) => nt(acc+1,t1)
           case Pred(t1:Term)  => nt(acc-1,t1)
           case _ => throw NoRulesApply("num_term:Not a number")
@@ -274,6 +288,8 @@ object Syntax {
       this match {
         case False() => "false"
         case True() => "true"
+        case Unit() => "unit"
+        case FloatTerm(v1) => v1.toString
         case App(t1:Term,t2:Term) => t1.toPrettyPrint(ctx) + " "+t2.toPrettyPrint(ctx)
         case Abs(name:String,_,body:Term) => "lambda "+name+". "+body.toPrettyPrint(ctx)
         case Var(x:Int,_) => try{ 
@@ -282,7 +298,7 @@ object Syntax {
           case (e:Exception) => "?"+x.toString
 
         }
-        case t:Term if is_numerical() => num_term().toString
+        case t:Term if isNat() => num_term().toString
         //for identifiers
         case IsZero(t) => "iszero ("+ t.toPrettyPrint(ctx)+")"
         case Succ(t) => "succ ("+ t.toPrettyPrint(ctx)+")"
@@ -298,7 +314,9 @@ object Syntax {
 
   case class Unit extends Term
   case class StringTerm(v:String) extends Term
-  case class NumberTerm(v:Double) extends Term
+  case class NumberTerm(v:Int) extends Term
+  case class FloatTerm(v:Double) extends Term
+  case class TimesFloat(t1:Term,t2:Term) extends Term
   case class True extends Term
   case class False extends Term
   case class Zero extends Term

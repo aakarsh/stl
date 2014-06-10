@@ -13,7 +13,7 @@ import java.io._
 class LambdaLexer extends StdLexical with ImplicitConversions { 
 
   val types =List("Bool","Nat","Unit","String","Float")
-  val nat = List("iszero","succ","pred")
+  val nat = List("iszero","succ","pred","timesfloat")
   val if_k = List("if","then","else")
   val base_vals = List("true","false","unit")
 
@@ -28,9 +28,14 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | string ^^ StringLit
       | number ~ letter ^^ { case n ~ l => ErrorToken("Invalid number format : " + n + l) }
       | '-' ~> whitespace ~ number ~ letter ^^ { case ws ~ num ~ l => ErrorToken("Invalid number format : -" + num + l) }
-      | '-' ~> whitespace ~ number ^^ { case ws ~ num => NumericLit("-" + num) }
+      | '-' ~> whitespace ~ float ^^ { case ws ~ num => FloatLit("-" + num) }
+      | '-' ~> whitespace ~ intPart ^^ { case ws ~ num => NumericLit("-" + num) }
       | special_char
-      | number ^^ NumericLit
+
+      | float ^^ FloatLit
+      | intPart ^^ NumericLit
+
+
       | EofCh ^^^ EOF
 
       | delim
@@ -43,9 +48,19 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
     if (reserved contains strRep) Keyword(strRep) else ErrorToken("Not a keyword: " + strRep)
   }
 
+  /** The class of numeric literal tokens */
+  case class FloatLit(chars: String) extends Token {
+    override def toString = chars
+  }
+
   def number = intPart ~ opt(fracPart) ~ opt(expPart) ^^ { case i ~ f ~ e =>
     i + optString(".", f) + optString("", e)
   }
+
+  def float = intPart ~ fracPart ~ opt(expPart) ^^ { case i ~ f ~ e =>
+    i + "."+f+ optString("", e)
+  }
+
   def intPart = zero | intList
   def intList = nonzero ~ rep(digit) ^^ {case x ~ y => (x :: y) mkString ""}
   def fracPart = '.' ~> rep(digit) ^^ { _ mkString "" }

@@ -12,7 +12,7 @@ class TypingSpec extends UnitSpec {
     assertResult(TyBool(),"false"){  typeFirst("false;")    }
     assertResult(TyNat(),"0"){  typeFirst("0;")    }
     //kind of messed up
-    assertResult(TyFloat(),"1"){  typeFirst("1;")    }
+    assertResult(TyNat(),"1"){  typeFirst("1;")    }
   }
 
   it should "check abstractions" in {

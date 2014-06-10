@@ -51,7 +51,7 @@ class ParserSpec extends UnitSpec {
 
 
   it should "parse let " in {
-    val exp = Let("x",NumberTerm(2.0),Var(0,1))
+    val exp = Let("x",NumberTerm(2),Var(0,1))
     assertResult(exp ,"hmm"){
       parser.parseFirstTerm("let x = 2 in x")
     }
@@ -154,7 +154,7 @@ class ParserSpec extends UnitSpec {
 
   it should "now trying lexer dependent parser" in {
     val parser = new LambdaParser();
-    assertResult(NumberTerm(10.0),"got number parsed"){ parser.parseFirstTerm("10") } 
+    assertResult(NumberTerm(10),"got number parsed"){ parser.parseFirstTerm("10") } 
     assertResult(StringTerm("hello"),"parsed string") {parser.parseFirstTerm("\"hello\"")}
     assertResult(If(Zero(),Zero(),Zero()),"Failed if parsing") {parser.parseFirstTerm("if 0 then 0 else 0")}
     assertResult(Abs("x",TyAny(),True()),"parsed string") {parser.parseFirstTerm("lambda x. true")}

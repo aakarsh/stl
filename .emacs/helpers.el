@@ -7,7 +7,7 @@
 (defvar project-dir "/home/aakarsh/src/scala/stl/")
 (defvar scala-files-regexp "*.scala")
 
-(file-cache-add-directory project-dir ".*scala")
+(file-cache-add-directory-recursively project-dir ".*scala")
 
 
 (defvar an/scala-class-find-regexp
@@ -173,3 +173,4 @@
 ))
 
 (global-set-key (kbd "C-c w") 'other-frame)
+(global-set-key (kbd "C-c M-f") 'file-cache-ido-find-file)

@@ -7,9 +7,9 @@ import Syntax._
 class EvaluatorSpec extends UnitSpec {
 
   "Numbers" should "be numerical"  in {
-      assert(Zero().is_numerical())
-      assert(Succ(Zero()).is_numerical())
-      assert(Pred(Zero()).is_numerical())
+      assert(Zero().isNat())
+      assert(Succ(Zero()).isNat())
+      assert(Pred(Zero()).isNat())
   }
 
   "Values" should "be values" in {
@@ -46,7 +46,6 @@ class EvaluatorSpec extends UnitSpec {
     Evaluator.processString("(lambda x. x x)")
     Evaluator.processString("(lambda x. x x) (lambda x. x) (lambda x. x)")
     val pair = Evaluator.processString("((lambda x. lambda y. lambda f. (f x) y ) false ) true")
-
 //    val hd  = Evaluator.run("(lambda p. p (lambda  )")
 //    println(pair)
 

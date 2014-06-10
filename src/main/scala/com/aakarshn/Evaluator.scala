@@ -16,9 +16,9 @@ object Evaluator {
 
   def evalTerm1(term:Term,ctx:Context): Term =  {
 
-    def eval_numerical(t1:Term,ctx:Context) = {
+    def evalNat(t1:Term,ctx:Context) = {
       val result = evalTerm1(t1,ctx)
-      require(result.is_numerical)
+      require(result.isNat())
       result
     }
 
@@ -44,13 +44,17 @@ object Evaluator {
       case  If(False(),t2,t3) => t3
       case  If(t1:Term,t2:Term,t3:Term)   => If(evalTerm1(t1,ctx),t2,t3)
       case  Succ(Pred(t1)) => t1
-      case  Succ(t1)  =>  Succ(eval_numerical(t1,ctx))
+      case  Succ(t1)  =>  Succ(evalNat(t1,ctx))
       case  Pred(Succ(t1)) => t1
-      case  Pred(t1)  => Pred(eval_numerical(t1,ctx))
+      case  Pred(t1)  => Pred(evalNat(t1,ctx))
       case  IsZero(Zero()) => True()
       case  IsZero(Succ(t:Term)) => False()
       case  IsZero(Pred(t:Term)) => False()
       case  IsZero(t1) => IsZero(evalTerm1(t1,ctx))
+
+      case TimesFloat(FloatTerm(v1),FloatTerm(v2)) =>
+        FloatTerm(v1*v2)
+
       case  Let(name:String,v2:Term,body:Term) if v2.is_value => {
         body.substitute(v2)
       }
@@ -76,11 +80,12 @@ object Evaluator {
             if(debug) 
               println("[debug]re-substituting fix body  "+fixed_body)
 
-            var r = fixed_body.substitute(fixed_term)
+            var retval = fixed_body.substitute(fixed_term)
 
             if(debug)
               println("[debug] new fix term "+fixed_term)
-            r
+
+            retval
           }
           case _ => 
             throw NoRulesApply("Fix passed in non abstraction term "+fixed_body)
@@ -116,9 +121,11 @@ object Evaluator {
       case False()   => TyBool()
       case Unit()    => TyUnit()
       case Zero()    => TyNat()
-      case StringTerm(t) => TyString()
-      case NumberTerm(v:Double) => TyFloat()
-
+      case StringTerm(_) => TyString()
+      case NumberTerm(_) => TyNat()
+      case FloatTerm(_) => TyFloat()
+      case TimesFloat(FloatTerm(_),FloatTerm(_)) => 
+        TyFloat()
       /*
          Built in language constructs
        */
@@ -187,7 +194,7 @@ object Evaluator {
       */
       case Abs(x,tyT1,body:Term) =>
         val rctx = addNameWithType(ctx,x,tyT1)
-        if(debug) println("[debug] Adding to binding toContext \n"+rctx)
+        if(debug) println("[debug] Adding to binding toContext \n"+toPrettyPrintCtx(rctx))
         val bodyType = typeof(body,rctx)
         TyArrow(tyT1,bodyType)
       /*

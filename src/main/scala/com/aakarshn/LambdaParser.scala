@@ -28,6 +28,7 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
   val debug = true
 
   import lexical.{Keyword,Scanner,Identifier,StringLit,NumericLit,SpecialChar}
+  import lexical.FloatLit
   import Syntax._
 
   def cmds:Parser[List[CtxCmd]] = rep(cmd<~SEMICOLON.*)
@@ -38,13 +39,11 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
            ctx:Context =>
            val b = ctxBind(ctx)
            (Bind(s,b), addBinding(ctx,s,b))
-//             addName(ctx,s))
     }
      | term^^{ 
          case subterm =>  toCtx(Eval,subterm)
      })
 
-  /// What is TmAbbABind supposed to do
   def binder:Parser[CtxBind] = 
      (SLASH ^^ {
        case (_) =>{(ctx:Context) =>
@@ -62,11 +61,13 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
   def term:(Parser[CtxTerm]) = (
         app_term
+      | float
       | number
       | var_term
       | string
       | base_value
       | if_term
+      | times_float
       | succ
       | pred
       | fix
@@ -88,6 +89,14 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       }
   }
 
+  def times_float:Parser[CtxTerm] = Keyword("timesfloat")~float~float ^^ {
+    case (_~t1~t2) => 
+      {ctx:Context =>
+        val (v1,_) = t1(ctx)
+        val (v2,_) = t2(ctx)
+        (TimesFloat(v1,v2),ctx)
+      }}
+  
   def if_term:Parser[CtxTerm] = Keyword("if")~term~Keyword("then")~term~Keyword("else")~term ^^ {
       case (_~e1~_~e2~_~e3)  => 
       {ctx:Context =>
@@ -114,7 +123,6 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     |  atomic_type_parser)
 
   def type_term:Parser[Type] = COLON~>arrow_type_parser 
-
 
   def lambda_term:Parser[CtxTerm] = Keyword("lambda")~>ident~(type_term.?)~"."~term^^ {
     case (s~ty~_~t) => 
@@ -168,12 +176,23 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
     case StringLit(s) => toCtxTerm(StringTerm(s))
   })
 
-  def number:Parser[CtxTerm] = accept("number",{
-    case NumericLit(s) => 
-          val n = s.toDouble
-          if (n <= 0) toCtxTerm(Zero)
-          else toCtxTerm(NumberTerm(n.toDouble))
+  def float:Parser[CtxTerm] = accept("float",{
+    case FloatLit(s) => {
+      val n = s.toDouble
+      toCtxTerm(FloatTerm(n))
+    }      
   })
+
+  def number:Parser[CtxTerm] = accept("integer",{
+    case NumericLit(s) =>  {
+          val n = s.toDouble
+          if (n.isValidInt){
+            if (n == 0) toCtxTerm(Zero)
+            else toCtxTerm(NumberTerm(n.toInt))
+          }else{
+            toCtxTerm(FloatTerm(n))
+          }
+    }})
 
   /**
    *  Begin parsing interaface here.

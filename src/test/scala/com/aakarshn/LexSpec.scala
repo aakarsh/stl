@@ -25,6 +25,12 @@ class LexSpec extends UnitSpec {
     assertResult(SpecialChar(";"),f){f}
   }
 
+  it should "get float" in {
+    val scanner = new Scanner("2.1")
+    val f = scanner.first
+    assertResult(FloatLit("2.1"),"["+f+"]"){f}
+  }
+
   it should "get backslash" in {
     val scanner = new Scanner("/")
     val f = scanner.first
