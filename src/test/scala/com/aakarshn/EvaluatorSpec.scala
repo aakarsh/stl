@@ -1,5 +1,6 @@
 package com.aakarshn
 
+import java.io.File
 import org.scalatest.FlatSpec
 import org.scalatest.Assertions._
 import Evaluator._
@@ -54,10 +55,24 @@ class EvaluatorSpec extends UnitSpec {
 
 
 
-  it should "run simple simple-arithmetic.f file without any errores" in {
-    val dir = "/home/aakarsh/src/scala/stl/src/main/resources/test-files/"
-    val filename = dir+"simple-arithmetic.f"
-    Evaluator.processFile(filename,emptycontext);
+  it should "process test files without errors" in {
+    val dir = "test/"
+    val filename = dir+"test-1.f"
+    val files = new File(dir).listFiles.filter(_.toString.endsWith(".f")).map(_.getPath).sortWith(_.compareTo(_) < 0)
+    for(file<- files){
+
+      try{
+        println("Begun processing file "+file)
+        Evaluator.processFile(file,emptycontext)
+        println("Finished processing file "+file)
+      }catch{
+        case (ex:Exception) =>
+          ex.printStackTrace()
+          fail("Evaluator failed on file "+file);
+
+      }
+    }
+//    Evaluator.processFile(filename,emptycontext);
   }
 
   

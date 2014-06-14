@@ -301,8 +301,10 @@ object Evaluator {
       try{
         line match {
           case ":q" =>  ok = false;
-          case ":l" =>  {
+          case line if line.startsWith(":l") =>  {
             val fname  = line.split(" ")(1)
+            if(debug)
+              println("[debug] Eval file :"+fname)
             ctx = Evaluator.processFile(fname,ctx)
           }
           case _  => 

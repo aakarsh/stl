@@ -8,6 +8,7 @@
 (defvar scala-files-regexp "*.scala")
 
 (file-cache-add-directory-recursively project-dir ".*scala")
+(file-cache-add-directory-recursively combinator-dir ".*scala")
 
 
 (defvar an/scala-class-find-regexp

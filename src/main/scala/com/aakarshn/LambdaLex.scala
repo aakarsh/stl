@@ -31,13 +31,9 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
       | '-' ~> whitespace ~ float ^^ { case ws ~ num => FloatLit("-" + num) }
       | '-' ~> whitespace ~ intPart ^^ { case ws ~ num => NumericLit("-" + num) }
       | special_char
-
       | float ^^ FloatLit
       | intPart ^^ NumericLit
-
-
       | EofCh ^^^ EOF
-
       | delim
       | '\"' ~> failure("Unterminated string")
       | rep(letter) ^^ checkKeyword
@@ -83,7 +79,7 @@ class LambdaLexer extends StdLexical with ImplicitConversions {
    */
   def string = '\"' ~> rep(charSeq | chrExcept('\"', '\n', EofCh)) <~ '\"' ^^ { _ mkString "" }
 
-  override def whitespace = rep(whitespaceChar)
+//  override def whitespace = rep(whitespaceChar)
 
   def charSeq: Parser[String] =
     ('\\' ~ '\"' ^^^ "\""

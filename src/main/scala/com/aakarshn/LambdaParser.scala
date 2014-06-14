@@ -59,15 +59,15 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
 
   def expr:Parser[List[CtxTerm]] = rep(term<~SEMICOLON.*) 
 
-  def term:(Parser[CtxTerm]) = (
-        app_term
-      | float
+  def term:(Parser[CtxTerm]) = (      
+        float
+      | timesfloat
+      | app_term
       | number
       | var_term
       | string
       | base_value
       | if_term
-      | times_float
       | succ
       | pred
       | fix
@@ -89,7 +89,9 @@ class LambdaParser extends StdTokenParsers with ImplicitConversions  {
       }
   }
 
-  def times_float:Parser[CtxTerm] = Keyword("timesfloat")~float~float ^^ {
+  def timesfloat:Parser[CtxTerm] = 
+  ( Keyword("timesfloat")~float~float  
+   |Keyword("timesfloat")~term~term) ^^ {
     case (_~t1~t2) => 
       {ctx:Context =>
         val (v1,_) = t1(ctx)

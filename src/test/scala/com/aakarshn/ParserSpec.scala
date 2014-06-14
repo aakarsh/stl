@@ -177,6 +177,23 @@ class ParserSpec extends UnitSpec {
     }
   }
 
+  it should "parse basic times float" in {
+    assertResult(TimesFloat(FloatTerm(1.0),FloatTerm(2.1)),""){
+      parser.parseFirstTerm("timesfloat 1.0 2.1")
+    }
+  }
+  /**
+    TODO: Fix failing test
+  it should "parse nested timesfloat" in {
+    val exp = TimesFloat(FloatTerm(1.0),TimesFloat(FloatTerm(1.1),FloatTerm(1.1)))
+    assertResult(exp,""){
+      parser.parseFirstTerm("timesfloat 1.0 (timesfloat 1.1 1.1) ")
+    }
+    assertResult(exp,"nested nested"){
+      parser.parseFirstTerm("timesfloat (1.0) (1.1) ")
+    }
+  }
+  */
   "Lexer" should "tag string literals" in {
     val lexical = new LambdaLexer()
     val scanner  = new lexical.Scanner("true false if")

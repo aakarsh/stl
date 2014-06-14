@@ -59,14 +59,6 @@ class ParseEvalSpec extends UnitSpec {
   }
 
 
-  it should "run simple simple-arithmetic.f file without any errores" in {
-    //TODO use relative path
-    val dir = "/home/aakarsh/src/scala/stl/src/main/resources/test-files/"
-    val filename = dir+"simple-arithmetic.f"
-    Evaluator.processFile(filename,emptycontext);
-  }
-
-
   it should "parse and run simple arihmetic" in{
       assert(Zero() == runFirst("succ pred 0"), "succ not working with pred")
       assert(Zero() == runFirst("pred succ 0"), "pred not working with succ")
